@@ -1,0 +1,38 @@
+generated: '2026-07-19'
+method: searched
+source: openapi/fever-reporting-api-openapi-original.json
+docs: https://developer.feverup.com/en/
+summary:
+  types:
+  - oauth2
+  oauth2_flows:
+  - password
+  - authorization_code
+  notes: >-
+    Two distinct auth surfaces. The Reporting API uses an OAuth2 password
+    (resource-owner) flow issuing bearer tokens from POST /v1/auth/token;
+    credentials are provisioned individually by a Fever sales rep. The Fever
+    MCP / event-catalog gateway uses OAuth 2.0 authorization_code with PKCE
+    (S256) and dynamic client registration.
+schemes:
+- name: OAuth2PasswordBearer
+  api: Fever Reporting API
+  type: oauth2
+  flows:
+  - flow: password
+    tokenUrl: /v1/auth/token
+    scopes: 0
+  sources:
+  - openapi/fever-reporting-api-openapi-original.json
+- name: FeverGatewayOAuth
+  api: Fever MCP / Event Catalog
+  type: oauth2
+  flows:
+  - flow: authorization_code
+    pkce: S256
+    authorizationUrl: https://data-search.apigw.feverup.com/authorize
+    tokenUrl: https://data-search.apigw.feverup.com/token
+    registrationUrl: https://data-search.apigw.feverup.com/register
+    scopes: [openid]
+  sources:
+  - https://data-search.apigw.feverup.com/.well-known/oauth-authorization-server
