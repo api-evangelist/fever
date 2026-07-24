@@ -1,0 +1,1648 @@
+openapi: 3.0.0
+info:
+  title: Fever - Reporting Authentication FeverZone API
+  description: "Access detailed event sales data through a reliable REST API.\n\n# Introduction\n\nThe Fever Reporting API is a RESTful service that gives our partners access to in-depth insights into their event sales\non Fever. With this API, partners can retrieve comprehensive order data, including ticket information, financial details\n(revenue, surcharges, discounts), plan details, and basic customer data.\n\n## Primary Use Cases\n\nThis API is intended for partners who want to integrate Fever sales data into their internal systems—such as CRMs,\nBusiness Intelligence (BI) platforms, data warehouses, or ERP systems.\n\n## What It’s Not For\n\n**This API is not designed for real-time operational use cases like access control or live inventory tracking.**\nFor those needs, please refer to other Fever APIs specifically built for operational workflows.\n\n## Getting Access\n\nAccess to the Fever Reporting API is granted individually. To request access, reach out to your Fever sales\nrepresentative. They’ll walk you through the process. Once approved, you'll receive credentials to authenticate and\nbegin using the API.\n\n## Extended Documentation (for Authorized Partners)\n\nOnce your access is approved and credentials are issued, you’ll be able to view the full technical documentation here:\n[\U0001F512 Extended Documentation](https://data-reporting-api.prod.feverup.com/v1/documentation).\nIf you haven’t received your credentials yet, you can still access the public section of our documentation, which covers\nmost of the key technical information.\n\n## Playground (for Authorized Partners)\n\nAfter receiving your API credentials, you can access the [▶️ Fever - Reporting API Playground](https://data-reporting-api.prod.feverup.com/v1/playground) to explore\nand test available endpoints.  The Playground is a Swagger UI interface that allows you to:\n- Browse detailed documentation for each endpoint\n- Execute live API requests directly from your browser\n- Authentication is required, so be sure to log in with your credentials before using the interface.\n\n## Status Page\n\nWe are committed to providing a reliable service for our users. To ensure transparency, you can subscribe to\nour [\U0001F4E3 Status Page](https://status.data-reporting-api.prod.feverup.com/) to stay informed about:\n\n- Scheduled maintenance that may temporarily affect the availability of the Reporting API\n- Ongoing incidents and issues impacting the performance or functionality of the API\n- Resolutions and updates on incidents in real-time\n\nBy subscribing, you will receive timely notifications via email, Slack, etc., keeping you updated on any events that\nmight impact your integration with the Reporting API.\n\n<br><br>\n# Quickstart\n\n### Code samples\n\n<details>\n<summary>\U0001F40D Python code sample to extract data from <code>/example-endpoint</code> endpoint</summary>\n\n```python\nimport json\nimport time\nfrom typing import Any\n\nimport requests\n\n\nclass RAPIConnector:\n    def __init__(self, hostname: str, username: str, password: str) -> None:\n        self.hostname = hostname\n        self.__username = username\n        self.__password = password\n        self.__access_token = self.__get_access_token()\n\n    def __get_access_token(self) -> str:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/auth/token\", data={\"username\": self.__username, \"password\": self.__password}\n        )\n        response.raise_for_status()\n        return response.json()[\"access_token\"]\n\n    def __get_request_headers(self) -> dict[str, str]:\n        return {\"Authorization\": f\"Bearer {self.__access_token}\"}\n\n    def post_example_endpoint(self, search_params: dict[str, Any]) -> requests.Response:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/example-endpoint/search\",\n            headers=self.__get_request_headers(),\n            json=search_params,\n        )\n        response.raise_for_status()\n        return response\n\n    def get_example_endpoint(\n            self, search_id: str, page: int = 0) -> requests.Response:\n        return requests.get(\n            f\"https://{self.hostname}/v1/example-endpoint/search/{search_id}\",\n            headers=self.__get_request_headers(),\n            params={\"page\": page},\n        )\n\n    def fetch_all_order_items(self, search_params: dict[str, Any]) -> dict[str, Any]:\n        search = self.post_example_endpoint(search_params=search_params)\n        search_id = search.json()[\"search_id\"]\n        is_ready = False\n        n_attempts = 0\n        while not is_ready and n_attempts < 10:\n            search = self.get_example_endpoint(search_id=search_id)\n            is_ready = True if search.status_code == 200 else False\n            if not is_ready:\n                print(f\"{search.status_code} - Waiting search result to be ready...\")\n            n_attempts += 1\n            time.sleep(1)\n            if n_attempts == 10:\n                raise Exception(\"Search result is not ready after 10 attempts\")\n\n        # Fetch all pages\n        data = search.json()[\"data\"]\n        partition_info = search.json()[\"partition_info\"]\n        total_rows = 0\n        print(f\"Found a total of {len(partition_info)} partitions\")\n        for partition in partition_info:\n            page = partition[\"partition_num\"]\n            total_rows += int(partition[\"rows\"])\n            if page == 0:\n                continue\n            print(f\"Fetching partition {page}...\")\n            search = self.get_example_endpoint(search_id=search_id, page=page)\n            data += search.json()[\"data\"]\n        assert len(data) == total_rows\n        return data\n\n\ndef main() -> None:\n    hostname = \"data-reporting-api.prod.feverup.com\"\n    username = \"<YOUR_USERNAME>\"\n    password = \"<YOUR_PASSWORD>\"\n    rapi_connector = RAPIConnector(hostname=hostname, username=username, password=password)\n    search_params = {\n        \"date_field\": \"CREATED_DATE_UTC\",\n        \"date_from\": \"2024-01-01\",\n        \"date_to\": \"2024-02-01\",\n    }\n    raw_path = \"example_endpoint_raw.json\"\n\n    print(\"### Extracting data from Reporting API ###\")\n    data = rapi_connector.fetch_all_order_items(search_params=search_params)\n\n    # Save the raw data to a JSON file\n    with open(raw_path, \"w\") as f:\n        f.write(json.dumps(data, indent=4))\n        print(f\"Data extracted and saved to {raw_path}\")\n\n\nif __name__ == \"__main__\":\n    main()\n```\n\n</details>\n\n## Authentication\n\nThe first step is to authenticate with the API. The API uses the OAuth 2.0 protocol to authenticate users.\nIn order to fetch a valid token, you must use the following endpoint:\n\n- `POST /oauth/token` -> It will return a valid `token` to be used in the following requests from your `username`\n  and `password` credentials.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/auth/token'\n  -H 'Accept: application/json'\n  -H 'Content-Type: application/x-www-form-urlencoded'\n  -d 'username=<YOUR_USERNAME>&password=<YOUR_PASSWORD>'\n```\n\nRemember to replace `<YOUR_USERNAME>` and `<YOUR_PASSWORD>` with the correct values.\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"access_token\": \"<YOUR_ACCESS_TOKEN>\",\n  \"token_type\": \"bearer\"\n}\n```\n\n</details>\n\n## How to request data for any endpoint in the Reporting API?\n\nThe approach is analogous for all the endpoints in the API. The API works with asynchronous requests that return\npaginated results. This means that for every request, you will need to follow these steps:\n\n1. Create a request asynchronously, in order to obtain a **search ID**. When creating this request, certain parameters\n   might be requested in order to filter the expected data, like entity IDs, dates, etc.\n2. Fetch the paginated results for the requested data. This step will require the **search ID** obtained in the previous\n   step, and it will return the paginated data for the requested report.\n\n<details>\n<summary>➡️ Example requesting data for <code>/reports/order-items</code> endpoint</summary>\n\n### 1. Create the request asynchronously to get order items data\n\nThe first step is to create a new search asynchronously in order to fetch the order items. You can do this by sending\na `POST` request to the endpoint.\n\n- `POST /xxx/search`: It will create a new search. The request body must contain the search criteria, allowing to search\n  by creation or update date among other parameters, depending on the endpoint itself. The response will contain the *\n  *search ID** that you can later use to fetch the paginated result.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n  ```shell\n  curl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search'\n    -H 'accept: application/json'\n    -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n    -H 'Content-Type: application/json'\n    -d '{ \"param_a\": \"<value>\" }'\n  ```\n\nRemember to replace `<YOUR_ACCESS_TOKEN>` with the correct value. You can check all the accepted parameters in the\nendpoints documentation (available in private docs).\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"<YOUR_SEARCH_ID>\"\n}\n```\n\nThe response will contain the **search ID** that you can use to fetch the paginated result afterwards.\n\n</details>\n\n### 2. Fetch the paginated results for the requested data\n\nThe last step is to fetch the search result data. You can do this by sending a `GET` request to\nthe `/xxx/{search_id}` endpoint.\n\n- `GET /xxx/<YOUR_SEARCH_ID>?page=<YOUR_PAGE_ID>`: It will return the search data for\n  the given ID and page number. By default, the page number is `0`, and only mandatory columns are returned.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'GET' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search/<YOUR_SEARCH_ID?page=<YOUR_PAGE_ID>\n  -H 'accept: application/json'\n  -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n```\n\nFor instance, this request will retrieve all mandatory fields plus `aaa` and `bbb` fields. Remember to\nreplace `<YOUR_SEARCH_ID>`, and `<YOUR_PAGE_ID>` with the correct values.\n\nOnce the output is ready to be consumed, it will return a JSON object containing the orders data for the given search ID\nand page number. Otherwise, it will return a `202` status code with a message indicating that the data is still being\nprocessed.\n\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=0\",\n      \"size\": 1234,\n      \"rows\": 100\n    },\n    {\n      \"partition_num\": 1,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=1\",\n      \"size\": 5678,\n      \"rows\": 100\n    }\n  ],\n  \"data\": [\n    \"your data records\"\n  ]\n}\n```\n\n</details>\n\n</details>\n\n<br><br>\n# Rate limits\n\nThe Fever Reporting API has rate limits on its endpoints.\n\n- **Authentication**: 20 requests/minute.\n- **Other endpoints**: 200 requests/minute.\n\nIf you exceed these limits, you will receive a `429 Too Many Requests` response. In this case, you should wait for one minute before making additional requests.\n\n<br><br>\n# FAQ\n\n\n> <details>\n> <summary style=\"font-size:18pt;\">\U0001F4AC How are <b><i>cancellations</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, cancellations are handled at the individual order item level. Each order item represents a single unit (ticket, add-on, etc.) within an order.\n>\n> When an order item is canceled, its `status` field will change to `CANCELED`.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">\U0001F4A1 <b>Example</b></summary>\n>\n> #### Before cancellation\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After cancellation of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"CANCELED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">\U0001F4AC How are <b><i>transfers</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, transfers are handled at the individual order item level. Each order item represents a single unit, so when an order item is transferred, the owner information is updated to reflect the new owner.\n>\n> When an order item is transferred, the `owner` field will be updated with the new owner's information. The order item maintains its `PURCHASED` status but now belongs to the new owner.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">\U0001F4A1 <b>Example</b></summary>\n>\n> #### Before transfer\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   // ... order fields\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\",\n>         \"email\": \"alice@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After transfer of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Charlie\",\n>         \"email\": \"charlie@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">\U0001F4AC How is the param <code>UPDATED_DATE_UTC</code> updated in the `/reports/order-items` endpoint?</summary>\n> <br>\n> Please note that not all fields in the returned JSON are eligible to update the value of <code>UPDATED_DATE_UTC</code>. Only fields directly related to the purchase and order items themselves will trigger a change in this value.\n> </details>\n"
+  contact:
+    name: Support
+    email: data-support@feverup.com
+  version: 1.5.0
+  x-logo:
+    url: https://res.cloudinary.com/fever/image/upload/ar_16:9,c_mpad,w_425/web/fever-logo-dark.jpg
+servers:
+- url: /v1
+tags:
+- name: FeverZone
+  description: 'These endpoints provide an interface to extract the data available in FeverZone reports. The delay of the data
+
+    is less than 15 minutes from reality. The route `/feverzone/sales-by-reseller` allows the user to get a sales summary
+
+    by reseller and can be aggregated by venues/ticket types.
+
+
+    ## Model documentation
+
+
+    #### Sales
+
+
+    This endpoint returns a summary of the sales, aligned with FeverZone Sales Summary report. It allows to filter by
+
+    `plan_ids`, `purchase_date` and `event_date`, and also specify the `currency` of the report.
+
+
+    <details>
+
+    <summary><b>📄 <code>/feverzone/sales-summary</code> response entity model</b></summary>
+
+
+    | Column Name            | Description                                                                                                                                                                                                                                                                                                                                                                         | Example value |
+
+    |------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+
+    | `currency`             | ISO3 currency of the order monetary field.                                                                                                                                                                                                                                                                                                                                          | EUR           |
+
+    | `orders`               | Metric representing the number of unique transactions (count) made, where each order may include multiple tickets and add-ons.                                                                                                                                                                                                                                                      | 100           |
+
+    | `tickets_sold`         | Metric representing the number (sum) of entry tickets sold, excluding any complimentary tickets issued (invitations) and add-ons. This value shows the total number of entry tickets, representing the primary sales volume.                                                                                                                                                        | 200           |
+
+    | `addons_sold`          | Metric representing the number (sum) of add-ons sold, excluding complimentary invitations. Indicates the total number of add-ons purchased.                                                                                                                                                                                                                                         | 50            |
+
+    | `ticket_invitations`   | Metric representing the number (sum) of complimentary tickets issued at no charge for the user. Issuing invitations may have fees.                                                                                                                                                                                                                                                  | 10            |
+
+    | `addons_invitations`   | Metric representing the number (sum) of complimentary add-ons issued at no charge. Issuing add-ons may have fees.                                                                                                                                                                                                                                                                   | 5             |
+
+    | `ticket_gross_revenue` | Metric representing the revenue generated exclusively from the sale of entry tickets. It''s the sum of `tickets_sold` multiplied by their ticket price. It shows the financial contribution of ticket sales to the total revenue.                                                                                                                                                    | 1200.00       |
+
+    | `addon_gross_revenue`  | Metric representing the revenue generated from the sale of additional items or services, such as merchandise or premium experiences (a.k.a. add-ons). It''s the sum of `addons_sold` multiplied by their add-on price. It indicates the contribution of supplementary products or services to total revenue.                                                                         | 356.34        |
+
+    | `total_gross_revenue`  | Metric representing the total amount of revenue generated from ticket sales and add-ons, including surcharge, and before any discounts are applied. It equals to `ticket_gross_revenue` + `addon_gross_revenue` + `surcharge`. Indicates the overall financial performance, showing the total revenue collected from sales and additional charges before considering any discounts. | 1556.34       |
+
+    | `ticket_surcharge`     | Metric representing the surcharges applied specifically to entry ticket sales. It''s the sum of `tickets_sold` multiplied by their surcharge per ticket. It provides details on the extra fees associated with entry ticket purchases.                                                                                                                                               | 56.34         |
+
+    | `addon_surcharge`      | Metric representing the surcharges applied specifically to add-ons. It''s the sum of `addons_sold` multiplied by their surcharge per add-on. It shows the extra fees collected from add-on purchases.                                                                                                                                                                                | 0.00          |
+
+    | `surcharge`            | Metric representing the sum of additional booking fees applied to the order at checkout. It''s the sum of `ticket_surcharge` and `addon_surcharge`. It represents extra charges collected.                                                                                                                                                                                           | 56.34         |
+
+    | `discount`             | Metric representing the total value of all discounts applied through promo codes or special offers. It''s the sum of all discounts applied, and it''s represented with a negative value. It indicates the amount of revenue that has been reduced due to promotional efforts.                                                                                                         | -100.00       |
+
+    | `user_payment`         | Metric representing the total revenue collected after discounts. It is computed as the `total_gross_revenue` + `discounts`. It reflects actual revenue paid by customers.                                                                                                                                                                                                           | 1456.34       |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><b>📄 <code>/feverzone/sales-by-ticket-type</code> response entity model</b></summary>
+
+
+    | Column Name            | Description                                                                                                                                                                                                                                                                                                                                                                         | Example value |
+
+    |------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+
+    | `currency`             | ISO3 currency of the order monetary field.                                                                                                                                                                                                                                                                                                                                          | EUR           |
+
+    | `ticket_type`          | Type of ticket sold.                                                                                                                                                                                                                                                                                                                                                                | Adult         |
+
+    | `tickets_sold`         | Metric representing the number (sum) of entry tickets sold, excluding any complimentary tickets issued (invitations) and add-ons. This value shows the total number of entry tickets, representing the primary sales volume.                                                                                                                                                        | 200           |
+
+    | `addons_sold`          | Metric representing the number (sum) of add-ons sold, excluding complimentary invitations. Indicates the total number of add-ons purchased.                                                                                                                                                                                                                                         | 50            |
+
+    | `ticket_invitations`   | Metric representing the number (sum) of complimentary tickets issued at no charge for the user. Issuing invitations may have fees.                                                                                                                                                                                                                                                  | 10            |
+
+    | `addons_invitations`   | Metric representing the number (sum) of complimentary add-ons issued at no charge. Issuing add-ons may have fees.                                                                                                                                                                                                                                                                   | 5             |
+
+    | `ticket_gross_revenue` | Metric representing the revenue generated exclusively from the sale of entry tickets. It''s the sum of `tickets_sold` multiplied by their ticket price. It shows the financial contribution of ticket sales to the total revenue.                                                                                                                                                    | 1200.00       |
+
+    | `addon_gross_revenue`  | Metric representing the revenue generated from the sale of additional items or services, such as merchandise or premium experiences (a.k.a. add-ons). It''s the sum of `addons_sold` multiplied by their add-on price. It indicates the contribution of supplementary products or services to total revenue.                                                                         | 356.34        |
+
+    | `total_gross_revenue`  | Metric representing the total amount of revenue generated from ticket sales and add-ons, including surcharge, and before any discounts are applied. It equals to `ticket_gross_revenue` + `addon_gross_revenue` + `surcharge`. Indicates the overall financial performance, showing the total revenue collected from sales and additional charges before considering any discounts. | 1556.34       |
+
+    | `ticket_surcharge`     | Metric representing the surcharges applied specifically to entry ticket sales. It''s the sum of `tickets_sold` multiplied by their surcharge per ticket. It provides details on the extra fees associated with entry ticket purchases.                                                                                                                                               | 56.34         |
+
+    | `addon_surcharge`      | Metric representing the surcharges applied specifically to add-ons. It''s the sum of `addons_sold` multiplied by their surcharge per add-on. It shows the extra fees collected from add-on purchases.                                                                                                                                                                                | 0.00          |
+
+    | `surcharge`            | Metric representing the sum of additional booking fees applied to the order at checkout. It''s the sum of `ticket_surcharge` and `addon_surcharge`. It represents extra charges collected.                                                                                                                                                                                           | 56.34         |
+
+    | `discount`             | Metric representing the total value of all discounts applied through promo codes or special offers. It''s the sum of all discounts applied, and it''s represented with a negative value. It indicates the amount of revenue that has been reduced due to promotional efforts.                                                                                                         | -100.00       |
+
+    | `user_payment`         | Metric representing the total revenue collected after discounts. It is computed as the `total_gross_revenue` + `discounts`. It reflects actual revenue paid by customers.                                                                                                                                                                                                           | 1456.34       |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><b>📄 <code>/feverzone/sales-by-reseller</code> response entity model</b></summary>
+
+
+    | Column Name                    | Description                                                    | Example value                        |
+
+    |--------------------------------|----------------------------------------------------------------|--------------------------------------|
+
+    | `reseller.id`                  | ID of the reseller                                             | 607f50e3-666f-4b2e-9620-38aabf6d9m10 |
+
+    | `reseller.name`                | Name of the reseller                                           | Reseller name                        |
+
+    | `reseller.email`               | Email of the reseller                                          | test@reseller.com                    |
+
+    | `reseller.type`                | Type of reseller                                               | AGENCY                               |
+
+    | `reseller.contact_language`    | Language that the reseller uses for communications             | es_ES                                |
+
+    | `reseller.accepts_comms`       | If reseller accepts communications or not                      | YES                                  |
+
+    | `ticket_type`                  | Ticket type by reseller                                        | Agencia \| Tarifa Básica             |
+
+    | `venue_name`                   | Venue name by reseller                                         | Palacio Real de Madrid               |
+
+    | `tickets_sold`                 | Tickets sold by reseller and aggregated dimensions applicable  | 1000                                 |
+
+    | `gross_revenue`                | Gross revenue by reseller and aggregated dimensions applicable | 10000                                |
+
+
+    </details>
+
+    '
+paths:
+  /feverzone/sales-summary/search:
+    post:
+      tags:
+      - FeverZone
+      summary: Request FeverZone sales summary report
+      description: Create a request to get a new FeverZone sales summary report within the given time range.The field plan_ids can be used to include only certain plans in the report.If empty, the sales summary report will refer to all plans.The search will be processed asynchronously, being able to fetch the result from the provided search ID
+      operationId: search_sales_summary_feverzone_sales_summary_search_post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesSummaryParams'
+      responses:
+        '202':
+          description: Request was created successfully but is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: "\ncurl -X POST \"https://<HOSTNAME>/v1/feverzone/sales-summary/search\" \\\n-H \"Content-Type: application/json\" \\\n-d '{\n    \"currency\": \"USD\",\n    \"plan_ids\": [\n        123,\n        456\n    ],\n    \"event_start_date_local_from\": \"2024-12-01 00:00\",\n    \"event_start_date_local_to\": \"2024-12-31 00:00\",\n    \"purchase_date_local_from\": \"2024-12-01 00:00\",\n    \"purchase_date_local_to\": \"2024-12-31 00:00\"\n}' \\\n-H \"Authorization: Bearer <YOUR_ACCESS_TOKEN>\"\n            "
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.post(f\"https://{hostname}/v1/feverzone/sales-summary/search\",\n    json={\n    \"currency\": \"USD\",\n    \"plan_ids\": [\n        123,\n        456\n    ],\n    \"event_start_date_local_from\": \"2024-12-01 00:00\",\n    \"event_start_date_local_to\": \"2024-12-31 00:00\",\n    \"purchase_date_local_from\": \"2024-12-01 00:00\",\n    \"purchase_date_local_to\": \"2024-12-31 00:00\"\n},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+  /feverzone/sales-summary/search/{search_id}:
+    get:
+      tags:
+      - FeverZone
+      summary: Get FeverZone sales summary report
+      description: Get an existing FeverZone sales summary report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and the report outputNotice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages
+      operationId: get_search_sales_summary_page_feverzone_sales_summary_search__search_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: search_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Search Id
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Page
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      responses:
+        '200':
+          description: Search was obtained successfully
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/Search_SalesSummary_SalesSummaryParams_-Output'
+                - $ref: '#/components/schemas/SearchStatus'
+                title: Response Get Search Sales Summary Page Feverzone Sales Summary Search  Search Id  Get
+                $ref: '#/components/schemas/Search_SalesSummary_SalesSummaryParams_-Input'
+        '202':
+          description: Request is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: 'User test@example.com is not allowed to access the following fields: ''forbidden_field_1'', ''forbidden_field_2'''
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: ForbiddenAccessToFieldError
+                  type: object
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: SearchIdNotFoundError
+                  type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search ID 1234 is not valid
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidSearchIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Invalid partition parameter. The partition must be long type parsable and between 0 and 1, but 2 is specified.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidPageIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Response is too large. Please apply filters to reduce its size.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: ResponseTooLargeError
+                  type: object
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '410':
+          description: Search expired
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Search expired. Please create a new one
+                      example: Search expired. Please create a new one
+                      title: Detail
+                      type: string
+                  title: SearchExpiredError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: '
+
+          curl -X GET "https://<HOSTNAME>/v1/feverzone/sales-summary/search/<SEARCH_ID>?page=0" \
+
+          -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+
+          '
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.get(f\"https://{hostname}/v1/feverzone/sales-summary/search/<SEARCH_ID>\",\n    params={'page': 0},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+  /feverzone/sales-by-ticket-type/search:
+    post:
+      tags:
+      - FeverZone
+      summary: Request FeverZone sales by ticket type report
+      description: Create a request to get a new FeverZone sales by ticket type report within the given time range.The field plan_ids can be used to include only certain plans in the report.If empty, the sales by ticket type report will refer to all plans.The search will be processed asynchronously, being able to fetch the result from the provided search ID
+      operationId: search_sales_by_ticket_type_feverzone_sales_by_ticket_type_search_post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SalesByTicketTypeParams'
+      responses:
+        '202':
+          description: Request was created successfully but is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: "\ncurl -X POST \"https://<HOSTNAME>/v1/feverzone/sales-by-ticket-type/search\" \\\n-H \"Content-Type: application/json\" \\\n-d '{\n    \"currency\": \"USD\",\n    \"plan_ids\": [\n        123,\n        456\n    ],\n    \"event_start_date_local_from\": \"2024-12-01 00:00\",\n    \"event_start_date_local_to\": \"2024-12-31 00:00\",\n    \"purchase_date_local_from\": \"2024-12-01 00:00\",\n    \"purchase_date_local_to\": \"2024-12-31 00:00\"\n}' \\\n-H \"Authorization: Bearer <YOUR_ACCESS_TOKEN>\"\n            "
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.post(f\"https://{hostname}/v1/feverzone/sales-by-ticket-type/search\",\n    json={\n    \"currency\": \"USD\",\n    \"plan_ids\": [\n        123,\n        456\n    ],\n    \"event_start_date_local_from\": \"2024-12-01 00:00\",\n    \"event_start_date_local_to\": \"2024-12-31 00:00\",\n    \"purchase_date_local_from\": \"2024-12-01 00:00\",\n    \"purchase_date_local_to\": \"2024-12-31 00:00\"\n},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+  /feverzone/sales-by-ticket-type/search/{search_id}:
+    get:
+      tags:
+      - FeverZone
+      summary: Get FeverZone sales by ticket type report
+      description: Get an existing FeverZone sales by ticket type report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and the report outputNotice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages
+      operationId: get_search_sales_by_ticket_type_page_feverzone_sales_by_ticket_type_search__search_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: search_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Search Id
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Page
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      responses:
+        '200':
+          description: Search was obtained successfully
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/Search_SalesByTicketType_SalesByTicketTypeParams_-Output'
+                - $ref: '#/components/schemas/SearchStatus'
+                title: Response Get Search Sales By Ticket Type Page Feverzone Sales By Ticket Type Search  Search Id  Get
+                $ref: '#/components/schemas/Search_SalesByTicketType_SalesByTicketTypeParams_-Input'
+        '202':
+          description: Request is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: 'User test@example.com is not allowed to access the following fields: ''forbidden_field_1'', ''forbidden_field_2'''
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: ForbiddenAccessToFieldError
+                  type: object
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: SearchIdNotFoundError
+                  type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search ID 1234 is not valid
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidSearchIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Invalid partition parameter. The partition must be long type parsable and between 0 and 1, but 2 is specified.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidPageIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Response is too large. Please apply filters to reduce its size.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: ResponseTooLargeError
+                  type: object
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '410':
+          description: Search expired
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Search expired. Please create a new one
+                      example: Search expired. Please create a new one
+                      title: Detail
+                      type: string
+                  title: SearchExpiredError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: '
+
+          curl -X GET "https://<HOSTNAME>/v1/feverzone/sales-by-ticket-type/search/<SEARCH_ID>?page=0" \
+
+          -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+
+          '
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.get(f\"https://{hostname}/v1/feverzone/sales-by-ticket-type/search/<SEARCH_ID>\",\n    params={'page': 0},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+  /feverzone/sales-by-reseller/search:
+    post:
+      tags:
+      - FeverZone
+      summary: Request resellers
+      description: Create a request to get resellers. The field reseller_ids can be used to filter the resellers by id.If empty, all resellers will be returned.The search will be processed asynchronously, being able to fetch the result from the provided search ID.
+      operationId: search_resellers_feverzone_sales_by_reseller_search_post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      requestBody:
+        content:
+          application/json:
+            schema:
+              anyOf:
+              - $ref: '#/components/schemas/SalesByResellerParams'
+              - type: 'null'
+              title: Config
+      responses:
+        '202':
+          description: Request was created successfully but is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: "\ncurl -X POST \"https://<HOSTNAME>/v1/sales-by-reseller/search\" \\\n-H \"Content-Type: application/json\" \\\n-d '{\n    \"reseller_ids\": [\n        \"648ad7b3-8367-4074-b6a3-ee1cfbdcf475\",\n        \"815904c9-5cca-914c-3f55-d59c5984711f\"\n    ],\n    \"group_by_dimensions\": [\n        \"TICKET_TYPE\",\n        \"VENUE\"\n    ]\n}' \\\n-H \"Authorization: Bearer <YOUR_ACCESS_TOKEN>\"\n            "
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.post(f\"https://{hostname}/v1/sales-by-reseller/search\",\n    json={\n    \"reseller_ids\": [\n        \"648ad7b3-8367-4074-b6a3-ee1cfbdcf475\",\n        \"815904c9-5cca-914c-3f55-d59c5984711f\"\n    ],\n    \"group_by_dimensions\": [\n        \"TICKET_TYPE\",\n        \"VENUE\"\n    ]\n},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+  /feverzone/sales-by-reseller/search/{search_id}:
+    get:
+      tags:
+      - FeverZone
+      summary: Get sales by reseller
+      description: Get resellers' sales aggregated from a search_id.
+      operationId: get_resellers_search_page_feverzone_sales_by_reseller_search__search_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: search_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Search Id
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Page
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      responses:
+        '200':
+          description: Search was obtained successfully
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/Search_SalesByReseller_SalesByResellerParams_-Output'
+                - $ref: '#/components/schemas/SearchStatus'
+                title: Response Get Resellers Search Page Feverzone Sales By Reseller Search  Search Id  Get
+                $ref: '#/components/schemas/Search_SalesByReseller_SalesByResellerParams_-Input'
+        '202':
+          description: Request is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: SearchIdNotFoundError
+                  type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search ID 1234 is not valid
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidSearchIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Invalid partition parameter. The partition must be long type parsable and between 0 and 1, but 2 is specified.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidPageIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Response is too large. Please apply filters to reduce its size.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: ResponseTooLargeError
+                  type: object
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '410':
+          description: Search expired
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Search expired. Please create a new one
+                      example: Search expired. Please create a new one
+                      title: Detail
+                      type: string
+                  title: SearchExpiredError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: '
+
+          curl -X GET "https://<HOSTNAME>/v1/sales-by-reseller/search/<SEARCH_ID>?page=0" \
+
+          -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+
+          '
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.get(f\"https://{hostname}/v1/sales-by-reseller/search/<SEARCH_ID>\",\n    params={'page': 0},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+components:
+  schemas:
+    Search_SalesSummary_SalesSummaryParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesSummaryParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesSummary'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesSummary, SalesSummaryParams]
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    Search_SalesByReseller_SalesByResellerParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesByResellerParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesByReseller'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesByReseller, SalesByResellerParams]
+    SalesByTicketTypeParams:
+      properties:
+        currency:
+          anyOf:
+          - $ref: '#/components/schemas/Currency'
+          - type: 'null'
+          description: Currency code to convert the sales data. If not provided, the data will be returned in the currency of the venue. However, it is mandatory if there are several currencies in the plans.
+          example: USD
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        event_start_date_local_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Local From
+          description: Local start date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        event_start_date_local_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Local To
+          description: Local end date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+        purchase_date_local_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local From
+          description: Local start date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        purchase_date_local_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local To
+          description: Local end date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+      additionalProperties: false
+      type: object
+      title: SalesByTicketTypeParams
+    Reseller:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Reseller ID
+          example: 607f50e3-666f-4b2e-9620-38aabf6d9m10
+        name:
+          type: string
+          title: Name
+          description: Reseller name
+          example: Reseller name
+        email:
+          type: string
+          title: Email
+          description: Reseller email
+          example: test@reseller.com
+        type:
+          type: string
+          title: Type
+          description: Reseller type
+          example: AGENCY
+        contact_language:
+          type: string
+          title: Contact Language
+          description: Reseller contact language
+          example: es_ES
+        accepts_comms:
+          type: string
+          title: Accepts Comms
+          description: Reseller accepts communications
+          example: 'YES'
+      type: object
+      required:
+      - id
+      - name
+      - email
+      - type
+      - contact_language
+      - accepts_comms
+      title: Reseller
+    SearchStatus:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
+          type: string
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
+      type: object
+      required:
+      - message
+      - search_id
+      title: SearchStatus
+    Search_SalesByTicketType_SalesByTicketTypeParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesByTicketTypeParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesByTicketType'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesByTicketType, SalesByTicketTypeParams]
+    Search_SalesSummary_SalesSummaryParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesSummaryParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesSummary'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesSummary, SalesSummaryParams]
+    SalesSummary:
+      properties:
+        tickets_sold:
+          type: integer
+          title: Tickets Sold
+          description: Number of tickets sold
+        addons_sold:
+          type: integer
+          title: Addons Sold
+          description: Number of addons sold
+        ticket_invitations:
+          type: integer
+          title: Ticket Invitations
+          description: Number of ticket invitations
+        addon_invitations:
+          type: integer
+          title: Addon Invitations
+          description: Number of addons invitations
+        total_gross_revenue:
+          type: number
+          title: Total Gross Revenue
+          description: Total gross revenue
+        ticket_gross_revenue:
+          type: number
+          title: Ticket Gross Revenue
+          description: Ticket gross revenue
+        addon_gross_revenue:
+          type: number
+          title: Addon Gross Revenue
+          description: Addons gross revenue
+        surcharge:
+          type: number
+          title: Surcharge
+          description: Surcharge
+        ticket_surcharge:
+          type: number
+          title: Ticket Surcharge
+          description: Tickets surcharge
+        addon_surcharge:
+          type: number
+          title: Addon Surcharge
+          description: Addons surcharge
+        discount:
+          type: number
+          title: Discount
+          description: Discount
+        user_payment:
+          type: number
+          title: User Payment
+          description: User payment
+        currency:
+          $ref: '#/components/schemas/Currency'
+          description: Report currency
+          example: USD
+        orders:
+          type: integer
+          title: Orders
+          description: Number of orders
+      type: object
+      required:
+      - tickets_sold
+      - addons_sold
+      - ticket_invitations
+      - addon_invitations
+      - total_gross_revenue
+      - ticket_gross_revenue
+      - addon_gross_revenue
+      - surcharge
+      - ticket_surcharge
+      - addon_surcharge
+      - discount
+      - user_payment
+      - orders
+      title: SalesSummary
+    SalesByReseller:
+      properties:
+        ticket_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ticket Type
+          description: Ticket type
+          example: Ticket type
+        tickets_sold:
+          type: integer
+          title: Tickets Sold
+          description: Venue tickets sold
+          example: 1000
+        gross_revenue:
+          type: number
+          title: Gross Revenue
+          description: Venue gross revenue
+          example: 10000
+        reseller:
+          $ref: '#/components/schemas/Reseller'
+        venue_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Venue Name
+          description: Venue name
+          example: Venue name
+      type: object
+      required:
+      - tickets_sold
+      - gross_revenue
+      - reseller
+      title: SalesByReseller
+    PartitionInfo:
+      properties:
+        partition_num:
+          type: integer
+          minimum: 0.0
+          title: Partition Num
+          description: Partition number
+          example: 0
+        endpoint:
+          type: string
+          title: Endpoint
+          description: Endpoint to fetch data for partition
+          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        size:
+          type: integer
+          minimum: 0.0
+          title: Size
+          description: Partition size in bytes
+          example: 15058
+        rows:
+          type: integer
+          minimum: 0.0
+          title: Rows
+          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
+          example: 4099
+      type: object
+      required:
+      - partition_num
+      - endpoint
+      - size
+      - rows
+      title: PartitionInfo
+      examples:
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        partition_num: 0
+        rows: 4099
+        size: 15058
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
+        partition_num: 1
+        rows: 3145
+        size: 11260
+    Currency:
+      type: string
+      enum:
+      - AED
+      - ARS
+      - AUD
+      - BGN
+      - BRL
+      - CAD
+      - CHF
+      - CLP
+      - COP
+      - CRC
+      - CZK
+      - DKK
+      - EUR
+      - GBP
+      - HKD
+      - HUF
+      - INR
+      - JPY
+      - KRW
+      - MAD
+      - MXN
+      - MYR
+      - NOK
+      - NZD
+      - PLN
+      - QAR
+      - RON
+      - RUB
+      - SAR
+      - SEK
+      - SGD
+      - USD
+      - ZAR
+      title: Currency
+    Search_SalesByTicketType_SalesByTicketTypeParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesByTicketTypeParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesByTicketType'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesByTicketType, SalesByTicketTypeParams]
+    SalesByResellerParams:
+      properties:
+        reseller_ids:
+          anyOf:
+          - items:
+              type: string
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Reseller Ids
+          description: List of ids of the resellers to filter by.
+          default: []
+          examples:
+          - []
+          - - 648ad7b3-8367-4074-b6a3-ee1cfbdcf475
+          - - 648ad7b3-8367-4074-b6a3-ee1cfbdcf475
+            - 815904c9-5cca-914c-3f55-d59c5984711f
+        group_by_dimensions:
+          items:
+            $ref: '#/components/schemas/ResellerGroupByDimension'
+          type: array
+          maxItems: 1000
+          title: Group By Dimensions
+          description: List of dimensions to group by.
+          default: []
+          examples:
+          - []
+          - - TICKET_TYPE
+            - VENUE
+      additionalProperties: false
+      type: object
+      title: SalesByResellerParams
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    ResellerGroupByDimension:
+      type: string
+      enum:
+      - TICKET_TYPE
+      - VENUE
+      title: ResellerGroupByDimension
+    Search_SalesByReseller_SalesByResellerParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesByResellerParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesByReseller'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesByReseller, SalesByResellerParams]
+    SalesByTicketType:
+      properties:
+        tickets_sold:
+          type: integer
+          title: Tickets Sold
+          description: Number of tickets sold
+        addons_sold:
+          type: integer
+          title: Addons Sold
+          description: Number of addons sold
+        ticket_invitations:
+          type: integer
+          title: Ticket Invitations
+          description: Number of ticket invitations
+        addon_invitations:
+          type: integer
+          title: Addon Invitations
+          description: Number of addons invitations
+        total_gross_revenue:
+          type: number
+          title: Total Gross Revenue
+          description: Total gross revenue
+        ticket_gross_revenue:
+          type: number
+          title: Ticket Gross Revenue
+          description: Ticket gross revenue
+        addon_gross_revenue:
+          type: number
+          title: Addon Gross Revenue
+          description: Addons gross revenue
+        surcharge:
+          type: number
+          title: Surcharge
+          description: Surcharge
+        ticket_surcharge:
+          type: number
+          title: Ticket Surcharge
+          description: Tickets surcharge
+        addon_surcharge:
+          type: number
+          title: Addon Surcharge
+          description: Addons surcharge
+        discount:
+          type: number
+          title: Discount
+          description: Discount
+        user_payment:
+          type: number
+          title: User Payment
+          description: User payment
+        currency:
+          $ref: '#/components/schemas/Currency'
+          description: Report currency
+          example: USD
+        ticket_type:
+          type: string
+          title: Ticket Type
+          description: Ticket type
+          example: General Admission
+      type: object
+      required:
+      - tickets_sold
+      - addons_sold
+      - ticket_invitations
+      - addon_invitations
+      - total_gross_revenue
+      - ticket_gross_revenue
+      - addon_gross_revenue
+      - surcharge
+      - ticket_surcharge
+      - addon_surcharge
+      - discount
+      - user_payment
+      title: SalesByTicketType
+    SalesSummaryParams:
+      properties:
+        currency:
+          anyOf:
+          - $ref: '#/components/schemas/Currency'
+          - type: 'null'
+          description: Currency code to convert the sales data. If not provided, the data will be returned in the currency of the venue. However, it is mandatory if there are several currencies in the plans.
+          example: USD
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        event_start_date_local_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Local From
+          description: Local start date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        event_start_date_local_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Local To
+          description: Local end date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+        purchase_date_local_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local From
+          description: Local start date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        purchase_date_local_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local To
+          description: Local end date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+      additionalProperties: false
+      type: object
+      title: SalesSummaryParams
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /v1/auth/token
+x-tagGroups:
+- name: Endpoints
+  tags:
+  - Authentication
+  - Billing L1
+  - Billing L2
+  - Carts
+  - Channels
+  - Customers
+  - Customers Mapping
+  - Deposits
+  - Entitlement Configurations
+  - Exchange Rates
+  - FeverZone
+  - Last Tour
+  - Magnati
+  - Neon
+  - Order Items
+  - Order Items Test
+  - Order Sales
+  - Plan Code Scans
+  - Plans
+  - Real Time
+  - Reservations
+  - SailGP
+  - Sessions
+  - Square
+  - Webhooks

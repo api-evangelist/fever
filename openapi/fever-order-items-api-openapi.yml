@@ -1,0 +1,2754 @@
+openapi: 3.0.0
+info:
+  title: Fever - Reporting Authentication Order Items API
+  description: "Access detailed event sales data through a reliable REST API.\n\n# Introduction\n\nThe Fever Reporting API is a RESTful service that gives our partners access to in-depth insights into their event sales\non Fever. With this API, partners can retrieve comprehensive order data, including ticket information, financial details\n(revenue, surcharges, discounts), plan details, and basic customer data.\n\n## Primary Use Cases\n\nThis API is intended for partners who want to integrate Fever sales data into their internal systems—such as CRMs,\nBusiness Intelligence (BI) platforms, data warehouses, or ERP systems.\n\n## What It’s Not For\n\n**This API is not designed for real-time operational use cases like access control or live inventory tracking.**\nFor those needs, please refer to other Fever APIs specifically built for operational workflows.\n\n## Getting Access\n\nAccess to the Fever Reporting API is granted individually. To request access, reach out to your Fever sales\nrepresentative. They’ll walk you through the process. Once approved, you'll receive credentials to authenticate and\nbegin using the API.\n\n## Extended Documentation (for Authorized Partners)\n\nOnce your access is approved and credentials are issued, you’ll be able to view the full technical documentation here:\n[\U0001F512 Extended Documentation](https://data-reporting-api.prod.feverup.com/v1/documentation).\nIf you haven’t received your credentials yet, you can still access the public section of our documentation, which covers\nmost of the key technical information.\n\n## Playground (for Authorized Partners)\n\nAfter receiving your API credentials, you can access the [▶️ Fever - Reporting API Playground](https://data-reporting-api.prod.feverup.com/v1/playground) to explore\nand test available endpoints.  The Playground is a Swagger UI interface that allows you to:\n- Browse detailed documentation for each endpoint\n- Execute live API requests directly from your browser\n- Authentication is required, so be sure to log in with your credentials before using the interface.\n\n## Status Page\n\nWe are committed to providing a reliable service for our users. To ensure transparency, you can subscribe to\nour [\U0001F4E3 Status Page](https://status.data-reporting-api.prod.feverup.com/) to stay informed about:\n\n- Scheduled maintenance that may temporarily affect the availability of the Reporting API\n- Ongoing incidents and issues impacting the performance or functionality of the API\n- Resolutions and updates on incidents in real-time\n\nBy subscribing, you will receive timely notifications via email, Slack, etc., keeping you updated on any events that\nmight impact your integration with the Reporting API.\n\n<br><br>\n# Quickstart\n\n### Code samples\n\n<details>\n<summary>\U0001F40D Python code sample to extract data from <code>/example-endpoint</code> endpoint</summary>\n\n```python\nimport json\nimport time\nfrom typing import Any\n\nimport requests\n\n\nclass RAPIConnector:\n    def __init__(self, hostname: str, username: str, password: str) -> None:\n        self.hostname = hostname\n        self.__username = username\n        self.__password = password\n        self.__access_token = self.__get_access_token()\n\n    def __get_access_token(self) -> str:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/auth/token\", data={\"username\": self.__username, \"password\": self.__password}\n        )\n        response.raise_for_status()\n        return response.json()[\"access_token\"]\n\n    def __get_request_headers(self) -> dict[str, str]:\n        return {\"Authorization\": f\"Bearer {self.__access_token}\"}\n\n    def post_example_endpoint(self, search_params: dict[str, Any]) -> requests.Response:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/example-endpoint/search\",\n            headers=self.__get_request_headers(),\n            json=search_params,\n        )\n        response.raise_for_status()\n        return response\n\n    def get_example_endpoint(\n            self, search_id: str, page: int = 0) -> requests.Response:\n        return requests.get(\n            f\"https://{self.hostname}/v1/example-endpoint/search/{search_id}\",\n            headers=self.__get_request_headers(),\n            params={\"page\": page},\n        )\n\n    def fetch_all_order_items(self, search_params: dict[str, Any]) -> dict[str, Any]:\n        search = self.post_example_endpoint(search_params=search_params)\n        search_id = search.json()[\"search_id\"]\n        is_ready = False\n        n_attempts = 0\n        while not is_ready and n_attempts < 10:\n            search = self.get_example_endpoint(search_id=search_id)\n            is_ready = True if search.status_code == 200 else False\n            if not is_ready:\n                print(f\"{search.status_code} - Waiting search result to be ready...\")\n            n_attempts += 1\n            time.sleep(1)\n            if n_attempts == 10:\n                raise Exception(\"Search result is not ready after 10 attempts\")\n\n        # Fetch all pages\n        data = search.json()[\"data\"]\n        partition_info = search.json()[\"partition_info\"]\n        total_rows = 0\n        print(f\"Found a total of {len(partition_info)} partitions\")\n        for partition in partition_info:\n            page = partition[\"partition_num\"]\n            total_rows += int(partition[\"rows\"])\n            if page == 0:\n                continue\n            print(f\"Fetching partition {page}...\")\n            search = self.get_example_endpoint(search_id=search_id, page=page)\n            data += search.json()[\"data\"]\n        assert len(data) == total_rows\n        return data\n\n\ndef main() -> None:\n    hostname = \"data-reporting-api.prod.feverup.com\"\n    username = \"<YOUR_USERNAME>\"\n    password = \"<YOUR_PASSWORD>\"\n    rapi_connector = RAPIConnector(hostname=hostname, username=username, password=password)\n    search_params = {\n        \"date_field\": \"CREATED_DATE_UTC\",\n        \"date_from\": \"2024-01-01\",\n        \"date_to\": \"2024-02-01\",\n    }\n    raw_path = \"example_endpoint_raw.json\"\n\n    print(\"### Extracting data from Reporting API ###\")\n    data = rapi_connector.fetch_all_order_items(search_params=search_params)\n\n    # Save the raw data to a JSON file\n    with open(raw_path, \"w\") as f:\n        f.write(json.dumps(data, indent=4))\n        print(f\"Data extracted and saved to {raw_path}\")\n\n\nif __name__ == \"__main__\":\n    main()\n```\n\n</details>\n\n## Authentication\n\nThe first step is to authenticate with the API. The API uses the OAuth 2.0 protocol to authenticate users.\nIn order to fetch a valid token, you must use the following endpoint:\n\n- `POST /oauth/token` -> It will return a valid `token` to be used in the following requests from your `username`\n  and `password` credentials.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/auth/token'\n  -H 'Accept: application/json'\n  -H 'Content-Type: application/x-www-form-urlencoded'\n  -d 'username=<YOUR_USERNAME>&password=<YOUR_PASSWORD>'\n```\n\nRemember to replace `<YOUR_USERNAME>` and `<YOUR_PASSWORD>` with the correct values.\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"access_token\": \"<YOUR_ACCESS_TOKEN>\",\n  \"token_type\": \"bearer\"\n}\n```\n\n</details>\n\n## How to request data for any endpoint in the Reporting API?\n\nThe approach is analogous for all the endpoints in the API. The API works with asynchronous requests that return\npaginated results. This means that for every request, you will need to follow these steps:\n\n1. Create a request asynchronously, in order to obtain a **search ID**. When creating this request, certain parameters\n   might be requested in order to filter the expected data, like entity IDs, dates, etc.\n2. Fetch the paginated results for the requested data. This step will require the **search ID** obtained in the previous\n   step, and it will return the paginated data for the requested report.\n\n<details>\n<summary>➡️ Example requesting data for <code>/reports/order-items</code> endpoint</summary>\n\n### 1. Create the request asynchronously to get order items data\n\nThe first step is to create a new search asynchronously in order to fetch the order items. You can do this by sending\na `POST` request to the endpoint.\n\n- `POST /xxx/search`: It will create a new search. The request body must contain the search criteria, allowing to search\n  by creation or update date among other parameters, depending on the endpoint itself. The response will contain the *\n  *search ID** that you can later use to fetch the paginated result.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n  ```shell\n  curl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search'\n    -H 'accept: application/json'\n    -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n    -H 'Content-Type: application/json'\n    -d '{ \"param_a\": \"<value>\" }'\n  ```\n\nRemember to replace `<YOUR_ACCESS_TOKEN>` with the correct value. You can check all the accepted parameters in the\nendpoints documentation (available in private docs).\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"<YOUR_SEARCH_ID>\"\n}\n```\n\nThe response will contain the **search ID** that you can use to fetch the paginated result afterwards.\n\n</details>\n\n### 2. Fetch the paginated results for the requested data\n\nThe last step is to fetch the search result data. You can do this by sending a `GET` request to\nthe `/xxx/{search_id}` endpoint.\n\n- `GET /xxx/<YOUR_SEARCH_ID>?page=<YOUR_PAGE_ID>`: It will return the search data for\n  the given ID and page number. By default, the page number is `0`, and only mandatory columns are returned.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'GET' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search/<YOUR_SEARCH_ID?page=<YOUR_PAGE_ID>\n  -H 'accept: application/json'\n  -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n```\n\nFor instance, this request will retrieve all mandatory fields plus `aaa` and `bbb` fields. Remember to\nreplace `<YOUR_SEARCH_ID>`, and `<YOUR_PAGE_ID>` with the correct values.\n\nOnce the output is ready to be consumed, it will return a JSON object containing the orders data for the given search ID\nand page number. Otherwise, it will return a `202` status code with a message indicating that the data is still being\nprocessed.\n\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=0\",\n      \"size\": 1234,\n      \"rows\": 100\n    },\n    {\n      \"partition_num\": 1,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=1\",\n      \"size\": 5678,\n      \"rows\": 100\n    }\n  ],\n  \"data\": [\n    \"your data records\"\n  ]\n}\n```\n\n</details>\n\n</details>\n\n<br><br>\n# Rate limits\n\nThe Fever Reporting API has rate limits on its endpoints.\n\n- **Authentication**: 20 requests/minute.\n- **Other endpoints**: 200 requests/minute.\n\nIf you exceed these limits, you will receive a `429 Too Many Requests` response. In this case, you should wait for one minute before making additional requests.\n\n<br><br>\n# FAQ\n\n\n> <details>\n> <summary style=\"font-size:18pt;\">\U0001F4AC How are <b><i>cancellations</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, cancellations are handled at the individual order item level. Each order item represents a single unit (ticket, add-on, etc.) within an order.\n>\n> When an order item is canceled, its `status` field will change to `CANCELED`.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">\U0001F4A1 <b>Example</b></summary>\n>\n> #### Before cancellation\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After cancellation of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"CANCELED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">\U0001F4AC How are <b><i>transfers</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, transfers are handled at the individual order item level. Each order item represents a single unit, so when an order item is transferred, the owner information is updated to reflect the new owner.\n>\n> When an order item is transferred, the `owner` field will be updated with the new owner's information. The order item maintains its `PURCHASED` status but now belongs to the new owner.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">\U0001F4A1 <b>Example</b></summary>\n>\n> #### Before transfer\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   // ... order fields\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\",\n>         \"email\": \"alice@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After transfer of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Charlie\",\n>         \"email\": \"charlie@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">\U0001F4AC How is the param <code>UPDATED_DATE_UTC</code> updated in the `/reports/order-items` endpoint?</summary>\n> <br>\n> Please note that not all fields in the returned JSON are eligible to update the value of <code>UPDATED_DATE_UTC</code>. Only fields directly related to the purchase and order items themselves will trigger a change in this value.\n> </details>\n"
+  contact:
+    name: Support
+    email: data-support@feverup.com
+  version: 1.5.0
+  x-logo:
+    url: https://res.cloudinary.com/fever/image/upload/ar_16:9,c_mpad,w_425/web/fever-logo-dark.jpg
+servers:
+- url: /v1
+tags:
+- name: Order Items
+  description: 'These endpoints enable to access order-item data.
+
+
+    ## Filtering Options
+
+
+    The endpoint supports filtering by:
+
+
+    | Parameter | Type | Description |
+
+    |-----------|------|-------------|
+
+    | `order_ids` | array[integer] | List of specific order IDs |
+
+    | `plan_ids` | array[integer] | List of specific plan (event) IDs |
+
+    | `date_field` | string | Date field to filter on (`CREATED_DATE_UTC`, `UPDATED_DATE_UTC`, or `EVENT_START_DATE_UTC`). `UPDATED_DATE_UTC` filters on when the order **data** last changed (any field of the flattened record, including nested/enrichment fields such as plan name), matching the `updated_date_utc` field in the response — not the order''s own update time (`order_updated_date_utc`). |
+
+    | `date_from` | string | Start date for the selected date field. Format: `YYYY-MM-DD HH:mm` or `YYYY-MM-DD` |
+
+    | `date_to` | string | End date for the selected date field. Format: `YYYY-MM-DD HH:mm` or `YYYY-MM-DD` |
+
+
+    ## Model documentation
+
+
+    #### Orders with Order Items
+
+
+    The goal of this endpoint is to provide a comprehensive picture about orders with detailed information about their
+
+    associated order items, including buyers, owners, partners, plans, sessions, and more.
+
+
+    <details>
+
+    <summary><b>📄 <code>/reports/order-items</code> response entity model</b></summary>
+
+
+    | Column Name                | Description                                                                   | Example value                                              |
+
+    |----------------------------|-------------------------------------------------------------------------------|-------------------------------------------------------------|
+
+    | `id`                       | Unique order ID. This code groups all tickets bought in the same transaction. | 12345                                                      |
+
+    | `parent_order_id`          | If the order comes from a reschedule, the original order ID                   | 11234                                                      |
+
+    | `buyer`                    | Order buyer information.                                                      | _See `order.buyer` documentation below_                    |
+
+    | `created_date_utc`         | UTC date when the order was created.                                          | 2021-01-01T00:00:00Z                                       |
+
+    | `updated_date_utc`         | UTC date when the order **data** was last updated — moves whenever any field of the flattened order record changes (including nested/enrichment fields such as plan name, UTM or ratings). This is the field the `UPDATED_DATE_UTC` filter matches, so filtering by `UPDATED_DATE_UTC` and this value are always consistent. | 2021-01-01T00:00:00Z |
+
+    | `order_updated_date_utc`   | UTC date when the order **itself** was last updated (order-level fields only). Unlike `updated_date_utc`, it does not move when only nested/enrichment data changes. | 2021-01-01T00:00:00Z |
+
+    | `surcharge`                | Surcharge applied to the order.                                               | 0.0                                                        |
+
+    | `currency`                 | ISO3 currency of the order monetary fields.                                   | USD                                                        |
+
+    | `purchase_channel`         | Purchase channel where the transaction comes from.                            | web                                                        |
+
+    | `channel`                  | Channel slug through which this order was placed. Use this field to join with `POST /v1/reports/channels/search` — the `channel` field in both endpoints is the same slug. `null` when no channel is recorded on the order (e.g. box-office or pre-channel data). | partner-channel |
+
+    | `payment_method`           | Payment method used.                                                          | credit_card                                                |
+
+    | `purchase_location_source` | Purchase location information.                                                | _See `order.purchase_location_source` documentation below_ |
+
+    | `billing_zip_code`         | Billing ZIP Code manually fulfilled by the customer.                          | 28001                                                      |
+
+    | `utm`                      | UTM information attributed to the order.                                      | _See `order.utm` documentation below_                      |
+
+    | `partner`                  | Partner information.                                                          | _See `order.partner` documentation below_                  |
+
+    | `business`                 | Business associated with the order.                                           | _See `order.business` documentation below_                 |
+
+    | `plan`                     | Plan information.                                                             | _See `order.plan` documentation below_                     |
+
+    | `coupon`                   | Coupon information.                                                           | _See `order.coupon` documentation below_                   |
+
+    | `assigned_seats`           | List of assigned seats for the order.                                         | _See `order.assigned_seats` documentation below_           |
+
+    | `order_items`              | List of order items associated with this order.                               | _See `order.order_items` documentation below_              |
+
+    | `booking_questions`        | List of booking questions and answers for the order.                          | _See `order.booking_questions` documentation below_        |
+
+    | `order_group_id`           | 🚧 **Under Development.** Groups orders from cluster tickets. All orders with the same `order_group_id` belong to the same purchase group (e.g., bundled tickets across multiple venues). | 12345                                                      |
+
+    | `is_main_group_order`      | 🚧 **Under Development.** Flag indicating whether this is the main order in a group. `true` for the primary order, `false` for secondary orders in the same group.                       | true                                                       |
+
+    | `staff_notes`              | List of staff notes attached to the order. Opt-in: only returned when the search request includes `included_fields=staff_notes`; otherwise the field is omitted from the response. | `["Payment Details: Groupon", "change ticket to new day"]` |
+
+    | `booked_slots`             | List of booked slots (assets/rooms reserved by the cart).                     | _See `order.booked_slots` documentation below_             |
+
+    | `payment_details`          | Card payment details for the order (transaction id, brand and descriptive payment method). Empty/null when the order was not paid by card or no card details are recorded. | _See `order.payment_details` documentation below_ |
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.buyer</code></span></summary>
+
+
+    | Column Name            | Description                                                                                                     | Example value                                          |
+
+    |------------------------|-----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
+
+    | `id`                   | Unique ID of the buyer.                                                                                         | 123456                                                 |
+
+    | `first_name`           | First name of the order buyer.                                                                                  | John                                                   |
+
+    | `last_name`            | Last name of the order buyer.                                                                                   | Doe                                                    |
+
+    | `email`                | Email of the order buyer.                                                                                       | test@example.com                                       |
+
+    | `date_of_birthday`     | Date of birth of the order buyer.                                                                               | 1990-01-01                                             |
+
+    | `marketing_preference` | Indicates whether the user accepted receiving marketing communications from the partner in the checkout screen. | true                                                   |
+
+    | `language`             | Language of the order buyer, extracted from the device locale. The format is ISO 639-1 (two letters).           | en                                                     |
+
+    | `b2b_end_user`         | B2B end-user information. `null` when the buyer is not B2B or no B2B end user is linked to the order.           | _See `order.buyer.b2b_end_user` documentation below_   |
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order.buyer.b2b_end_user</code></span></summary>
+
+
+    | Column Name  | Description                       | Example value     |
+
+    |--------------|-----------------------------------|-------------------|
+
+    | `id`         | Unique ID of the B2B end user.    | 789012            |
+
+    | `email`      | Email of the B2B end user.        | test@feverup.com  |
+
+    | `first_name` | First name of the B2B end user.   | John              |
+
+    | `last_name`  | Last name of the B2B end user.    | Doe               |
+
+
+    </details>
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.purchase_location_source</code></span></summary>
+
+
+    | Column Name    | Description                                                                                                                                               | Example value |
+
+    |----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+
+    | `id_geo_name`  | Geo name ID from where the purchase was made. This field is inferred so it might not be accurate. More information at https://www.geonames.org/about.html | 123456        |
+
+    | `city_name`    | City from where the purchase was made. This field is inferred so it might not be accurate.                                                                | Madrid        |
+
+    | `country_code` | Country code from where the purchase was made. This field is inferred so it might not be accurate.                                                        | ES            |
+
+    | `region_code`  | Region code from where the purchase was made. This field is inferred so it might not be accurate.                                                         | MD            |
+
+    | `postal_code`  | Best estimate of user location at time of purchase, combining multiple sources of information.                                                            | 28001         |
+
+    | `quality`      | Quality order.                                                                                                                                            | 1.0           |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.utm</code></span></summary>
+
+
+    | Column Name            | Description                                                                     | Example value |
+
+    |------------------------|---------------------------------------------------------------------------------|---------------|
+
+    | `utm.source`           | Value of the UTM source field where the order comes from based on last click.   | google        |
+
+    | `utm.medium`           | Value of the UTM medium field where the order comes from based on last click.   | cpc           |
+
+    | `utm.campaign`         | Value of the UTM campaign field where the order comes from based on last click. | campaign_1234 |
+
+    | `utm.content`          | Value of the UTM content field where the order comes from based on last click.  | 692693771262  |
+
+    | `utm.term`             | Value of the UTM term field where the order comes from based on last click.     | candlelight   |
+
+    | `utm.referring_domain` | Value of the referring domain where the order comes from.                       | google.com    |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.partner</code></span></summary>
+
+
+    | Column Name | Description               | Example value |
+
+    |-------------|---------------------------|---------------|
+
+    | `id`        | Unique ID of the partner. | 1             |
+
+    | `name`      | Name of the partner.      | Partner Name  |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.business</code></span></summary>
+
+
+    | Column Name | Description                                 | Example value                        |
+
+    |-------------|---------------------------------------------|--------------------------------------|
+
+    | `id`        | Unique ID of the business.                  | 7c1caabf-85cd-42ac-96db-524b15443a7b |
+
+    | `name`      | Name of the business.                       | Sample City Tours                    |
+
+    | `tax_id`    | Tax identification number of the business.  | B12345678                            |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.plan</code></span></summary>
+
+
+    | Column Name  | Description                                                                                                                                          | Example value                                       |
+
+    |--------------|------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|
+
+    | `id`         | Unique ID of the plan.                                                                                                                               | 11                                                  |
+
+    | `name`       | Name of the plan, providing a short description of the event the client will attend.                                                                 | Plan Name                                           |
+
+    | `gallery`    | List of gallery resources (images / videos) attached to the plan. Opt-in: only returned when the search request includes `included_fields=gallery`; otherwise the field is omitted from the response. | _See `order.plan.gallery` documentation below_      |
+
+    | `taxonomies` | List of taxonomies attached to the plan. Opt-in: only returned when the search request includes `included_fields=taxonomies`; otherwise the field is omitted from the response.      | _See `order.plan.taxonomies` documentation below_   |
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order.plan.gallery</code></span></summary>
+
+
+    | Column Name | Description                                              | Example value                       |
+
+    |-------------|----------------------------------------------------------|-------------------------------------|
+
+    | `url`       | URL of the gallery resource.                             | https://www.example.com/image.jpg   |
+
+    | `type`      | Type of the gallery resource. One of `image` or `video`. | image                               |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order.plan.taxonomies</code></span></summary>
+
+
+    | Column Name | Description        | Example value   |
+
+    |-------------|--------------------|-----------------|
+
+    | `id`        | Unique taxonomy ID.| 1234            |
+
+    | `name`      | Taxonomy name.     | Taxonomy name   |
+
+
+    </details>
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.coupon</code></span></summary>
+
+
+    | Column Name | Description                                                | Example value |
+
+    |-------------|------------------------------------------------------------|---------------|
+
+    | `name`      | Name of the coupon.                                        | Coupon Name   |
+
+    | `code`      | Code of the coupon.                                        | COUPON_CODE   |
+
+    | `discount`  | Discount amount applied by the coupon.                     | 0.0           |
+
+    | `kind`      | Coupon kind label (e.g. `No Coupons`, partner-defined).    | No Coupons    |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.assigned_seats</code></span></summary>
+
+
+    | Column Name                       | Description                   | Example value |
+
+    |-----------------------------------|-------------------------------|---------------|
+
+    | `id`                              | Seat id.                      | seat_123      |
+
+    | `name`                            | Seat name.                    | A1            |
+
+    | `seating_provider`                | Seating provider.             | provider_name |
+
+    | `seating_provider_seat_reference` | Seating provider''s seat name. | ref_123       |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.booking_questions</code></span></summary>
+
+
+    | Column Name | Description                                    | Example value                               |
+
+    |-------------|------------------------------------------------|---------------------------------------------|
+
+    | `id`        | Booking question ID.                           | f4dd7822-8461-44d6-af47-acdbfd47bf80        |
+
+    | `question`  | The booking question text.                     | How did you find out about this experience? |
+
+    | `answers`   | List of answers provided by the user.          | ["Instagram", "Facebook"]                   |
+
+    | `index`     | The index of the question in the booking flow. | 1                                           |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.booked_slots</code></span></summary>
+
+
+    Cart-level array of booked slots. The same array is denormalized across every order in the same cart.
+
+
+    | Column Name       | Description                                                                                                          | Example value                                          |
+
+    |-------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|
+
+    | `id`              | Unique ID of the booked slot. Matches `order_item.booked_slot_id` for every order item assigned to this slot.        | 9876543                                                |
+
+    | `timeslot_utc`    | UTC start of the timeslot the slot is booked for.                                                                    | 2026-05-08T09:30:00Z                                   |
+
+    | `slot_count`      | Capacity counter from the cart engine. Useful for debugging only — see `party_size` for the actual people booked.    | 12                                                     |
+
+    | `occupancy_count` | Number of independent parties booked at the asset for this cart.                                                     | 1                                                      |
+
+    | `party_size`      | Total people (count of order items) sold for this booked slot.                                                       | 4                                                      |
+
+    | `is_removed`      | Whether the slot was removed by the cart engine.                                                                     | false                                                  |
+
+    | `activity`        | Activity that owns the booked asset.                                                                                 | _See `order.booked_slots.activity` documentation below_ |
+
+    | `asset`           | Asset (e.g. room) the slot is booked on.                                                                             | _See `order.booked_slots.asset` documentation below_   |
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order.booked_slots.activity</code></span></summary>
+
+
+    | Column Name | Description    | Example value           |
+
+    |-------------|----------------|-------------------------|
+
+    | `id`        | Activity ID.   | 481                     |
+
+    | `name`      | Activity name. | Escape Room Northbridge |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order.booked_slots.asset</code></span></summary>
+
+
+    | Column Name                                  | Description                                                                  | Example value  |
+
+    |----------------------------------------------|------------------------------------------------------------------------------|----------------|
+
+    | `id`                                         | Asset ID (e.g. an Escape This room).                                         | 3473           |
+
+    | `name`                                       | Asset name.                                                                  | NB - Asylum    |
+
+    | `description`                                | Asset description.                                                           |                |
+
+    | `availability_strategy`                      | Capacity strategy used by the asset (`BY_PARTY_COUNT` or `BY_PEOPLE_COUNT`). | BY_PARTY_COUNT |
+
+    | `max_party_size`                             | Maximum number of people allowed in a single party.                          | 4              |
+
+    | `min_party_size`                             | Minimum number of people required to book a party.                           | 1              |
+
+    | `max_num_parties`                            | Maximum number of independent parties the asset can host.                    | 1              |
+
+    | `partner_id`                                 | Partner that owns the asset.                                                 | 190            |
+
+    | `asset_type_id`                              | Asset type ID.                                                               | 7              |
+
+    | `is_manual_assignment_confirmation_required` | Whether the asset requires manual assignment confirmation.                   | false          |
+
+
+    </details>
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.payment_details</code></span></summary>
+
+
+    Order-level array of card payment details. Empty/null when the order was not paid by card. The same array is denormalized across every order item belonging to the same order.
+
+
+    | Column Name      | Description                                                               | Example value |
+
+    |------------------|---------------------------------------------------------------------------|---------------|
+
+    | `id`             | Transaction ID issued by the payment processor (Braintree, Stripe, ...).  | tx_abc123     |
+
+    | `card_brand`     | Card brand (`visa`, `mastercard`, `amex`, `discover`, ...).               | visa          |
+
+    | `payment_method` | Descriptive payment method joined from the order''s payment configuration. | Card          |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:18pt;"><code>order.order_items</code></span></summary>
+
+
+    | Column Name                       | Description                                                                                                                                                                                                                                                                                                                                                                                          | Example value                                     |
+
+    |-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|
+
+    | `id`                              | Unique ID of the order item.                                                                                                                                                                                                                                                                                                                                                                         | 123456                                            |
+
+    | `ticket_id`                       | Operational identifier of the ticket grouping order items from the same session. Provided for compatibility with transactional use cases (e.g., reschedules and transfers); it is not intended as a core reporting metric.                                                                                                                                                                           | 334455                                            |
+
+    | `booked_slot_id`                  | ID of the booked slot the order item was assigned to within its cart, when the activity behind the session uniquely resolves to a single booked slot (e.g. Escape This rooms). Matches `order.booked_slots[].id`. NULL when the activity exposes more than one asset and the cart engine spread parties across them; consumers can fall back to substring matching against `booked_slots[].asset.name`. | 9876543                                           |
+
+    | `cancellation_date_utc`           | Last UTC date when any part of the ticket was cancelled.                                                                                                                                                                                                                                                                                                                                             | 2021-01-01T00:00:00Z                              |
+
+    | `cancellation_type`               | Type of cancellation. REFUND: means that the ticket has been cancelled due to a refund. RESCHEDULE: means that the ticket has been cancelled due to a reschedule.                                                                                                                                                                                                                                    | REFUND                                            |
+
+    | `created_date_utc`                | UTC date of the ticket creation.                                                                                                                                                                                                                                                                                                                                                                     | 2021-01-01T00:00:00Z                              |
+
+    | `discount`                        | Discount applied to the ticket.                                                                                                                                                                                                                                                                                                                                                                      | 10.0                                              |
+
+    | `is_invite`                       | Indicates whether the ticket is an invitation from the partner.                                                                                                                                                                                                                                                                                                                                      | false                                             |
+
+    | `modified_date_utc`               | UTC date of the last modification of the ticket.                                                                                                                                                                                                                                                                                                                                                     | 2021-01-01T00:00:00Z                              |
+
+    | `purchase_date_utc`               | UTC date of the ticket purchase.                                                                                                                                                                                                                                                                                                                                                                     | 2021-01-01T00:00:00Z                              |
+
+    | `event_start_date_utc`            | UTC start date of the event associated with this order item.                                                                                                                                                                                                                                                                                                                                         | 2021-01-01T00:00:00Z                              |
+
+    | `validated_date_utc`              | UTC date when the order item was validated. This validation can be independent of the plan code (bar code), since some order items don''t have a plan code but can be validated.                                                                                                                                                                                                                      | 2021-01-01T00:00:00Z                              |
+
+    | `rating_comment`                  | Comment from the ticket user after attending the event.                                                                                                                                                                                                                                                                                                                                              | Great experience!                                 |
+
+    | `rating_value`                    | Rating given by the ticket user after attending the event, ranging from 1 to 5.                                                                                                                                                                                                                                                                                                                      | 5.0                                               |
+
+    | `surcharge`                       | Surcharge applied to the ticket.                                                                                                                                                                                                                                                                                                                                                                     | 2.0                                               |
+
+    | `status`                          | If the ticket is active, transferred, or cancelled. ACTIVE: means that the ticket ID can be redeemed or it is redeemed. CANCELLED: means that the ticket ID can''t be redeemed since it has been cancelled. TRANSFERRED: means that the ticket ID can''t be used since it has been fully transferred to another user.                                                                                  | ACTIVE                                            |
+
+    | `unitary_price`                   | Unitary price of the purchased ticket.                                                                                                                                                                                                                                                                                                                                                               | 50.0                                              |
+
+    | `metadata`                        | Partner-supplied identifiers for reconciliation against the partner''s own system of record. **Opt-in via `included_fields=metadata`.** NULL when the partner did not provide any reporting metadata for the order item.                                                                                                                                                                              | _See `order_item.metadata` documentation below_   |
+
+    | `owner`                           | Order item owner information.                                                                                                                                                                                                                                                                                                                                                                        | _See `order_item.owner` documentation below_      |
+
+    | `plan_codes`                      | Plan code associated with the order item.                                                                                                                                                                                                                                                                                                                                                            | _See `order_item.plan_codes` documentation below_ |
+
+    | `session`                         | Session information.                                                                                                                                                                                                                                                                                                                                                                                 | _See `order_item.session` documentation below_    |
+
+    | `pack`                            | Pack information if the order item belongs to a pack. `null` when the order item does not belong to a pack.                                                                                                                                                                                                                                                                                          | _See `order_item.pack` documentation below_       |
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order_item.metadata</code></span></summary>
+
+
+    Partner-supplied identifiers attached at the time of purchase, intended to help partners reconcile Fever order items against rows in their own system of record (box-office ticket IDs, internal SKUs, subproduct variants, etc.). Only present when the request opts in via `included_fields=metadata`; NULL when the partner did not provide any reporting metadata for the order item.
+
+
+    | Column Name              | Description                                                                                                                                                                                                     | Example value |
+
+    |--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+
+    | `external_id`            | Partner-supplied external identifier for the order item, as sent by the partner''s integration when the order was placed.                                                                                        | CJ51001B      |
+
+    | `external_subproduct_id` | Partner-supplied external subproduct identifier for the order item, used when a single plan exposes multiple distinguishable subproducts (e.g., adult vs. child ticket variants, add-ons, seating categories).  | ADULTO        |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order_item.owner</code></span></summary>
+
+
+    | Column Name            | Description                                                                                                     | Example value    |
+
+    |------------------------|-----------------------------------------------------------------------------------------------------------------|------------------|
+
+    | `id`                   | Unique ID of the person who owns the ticket.                                                                    | 123456           |
+
+    | `first_name`           | First name of the owner of the ticket.                                                                          | John             |
+
+    | `last_name`            | Last name of the owner of the ticket.                                                                           | Doe              |
+
+    | `email`                | Email of the owner of the ticket.                                                                               | test@example.com |
+
+    | `date_of_birthday`     | Date of birth of the owner of the ticket.                                                                       | 1990-01-01       |
+
+    | `marketing_preference` | Indicates whether the user accepted receiving marketing communications from the partner in the checkout screen. | true             |
+
+    | `language`             | Language of the owner of the ticket, extracted from the device locale. The format is ISO 639-1 (two letters).   | en               |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order_item.plan_codes</code></span></summary>
+
+
+    | Column Name         | Description                                                                                        | Example value        |
+
+    |---------------------|----------------------------------------------------------------------------------------------------|----------------------|
+
+    | `id`                | Unique ID of the plan code. A plan code is the unique code needed for redemption to join an event. | 111                  |
+
+    | `cd_barcode`        | Barcode code associated to the plan code.                                                          | A1B2C3               |
+
+    | `created_date_utc`  | UTC date of the creation of the plan code.                                                         | 2021-01-01T00:00:00Z |
+
+    | `modified_date_utc` | UTC date of the last modification of the plan code.                                                | 2021-01-01T00:00:00Z |
+
+    | `redeemed_date_utc` | UTC date when the plan code was redeemed.                                                          | 2021-01-01T00:00:00Z |
+
+    | `is_cancelled`      | Whether the plan code is cancelled or not.                                                         | false                |
+
+    | `is_validated`      | Whether the plan code has been validated or not.                                                   | true                 |
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order_item.session</code></span></summary>
+
+
+    | Column Name                  | Description                                                                                                                          | Example value                                        |
+
+    |------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|
+
+    | `id`                         | Unique ID of the session. A session represents a specific date and ticket type of a plan, and also the product the client purchased. | 123456                                               |
+
+    | `name`                       | Name of the session, providing a short description of the product the client purchased.                                              | Session Name                                         |
+
+    | `end_date_utc`               | UTC end date of the session.                                                                                                         | 2021-01-01T00:00:00Z                                 |
+
+    | `first_purchasable_date_utc` | UTC date of the first purchasable date of the session.                                                                               | 2021-01-01T00:00:00Z                                 |
+
+    | `is_addon`                   | Indicates whether the session is an addon.                                                                                           | false                                                |
+
+    | `is_wait_list`               | Indicates whether the session is actually a waitlist.                                                                                | false                                                |
+
+    | `start_date_utc`             | UTC start date of the session.                                                                                                       | 2021-01-01T00:00:00Z                                 |
+
+    | `venue`                      | Venue information.                                                                                                                   | _See `order_item.session.venue` documentation below_ |
+
+
+    <details>
+
+    <summary><span style="font-size:14pt;"><code>order_item.session.venue</code></span></summary>
+
+
+    | Column Name | Description                                                 | Example value |
+
+    |-------------|-------------------------------------------------------------|---------------|
+
+    | `city`      | City of the venue where the session takes place.            | Madrid        |
+
+    | `country`   | Country of the venue where the session takes place in ISO3. | Spain         |
+
+    | `name`      | Name of the venue where the session takes place.            | Venue Name    |
+
+    | `timezone`  | Timezone of the venue where the session takes place.        | Europe/Madrid |
+
+
+    </details>
+
+
+    </details>
+
+
+    <details>
+
+    <summary><span style="font-size:16pt;"><code>order_item.pack</code></span></summary>
+
+
+    Pack information for order items that belong to a pack. `null` when the order item does not belong to a pack.
+
+
+    | Column Name    | Description                                                                                                                                                                                                                     | Example value |
+
+    |----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|
+
+    | `id`           | Unique identifier of the pack unit. Groups all member order items belonging to the same purchased pack.                                                                                                                         | 11223         |
+
+    | `session_id`   | Unique catalog session ID for the pack. Matches the `id` returned by `GET /v1/sessions`. Stable across all purchases of the same pack session. Use this instead of `session_name`, which is not unique. `null` when the item does not belong to a pack. | 284360344 |
+
+    | `session_name` | Pack session label (display name of the pack). Not unique — multiple packs across different plans may share the same label.                                                                                                     | Family Pack   |
+
+
+    </details>
+
+
+    </details>
+
+
+    </details>
+
+    '
+paths:
+  /reports/order-items/search:
+    post:
+      tags:
+      - Order Items
+      summary: Request order items report
+      description: Create a request to get a new order items report within the given time range.The search will be processed asynchronously, being able to fetch the result from the provided search ID
+      operationId: search_order_items_reports_order_items_search_post
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderItemParams'
+      responses:
+        '202':
+          description: Request was created successfully but is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: "\ncurl -X POST \"https://<HOSTNAME>/v1/reports/order-items/search\" \\\n-H \"Content-Type: application/json\" \\\n-d '{\n    \"order_ids\": [\n        123,\n        456\n    ],\n    \"plan_ids\": [\n        123,\n        456\n    ],\n    \"date_field\": \"CREATED_DATE_UTC\",\n    \"date_from\": \"2024-12-18 00:00\",\n    \"date_to\": \"2024-12-19 00:00\"\n}' \\\n-H \"Authorization: Bearer <YOUR_ACCESS_TOKEN>\"\n            "
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.post(f\"https://{hostname}/v1/reports/order-items/search\",\n    json={\n    \"order_ids\": [\n        123,\n        456\n    ],\n    \"plan_ids\": [\n        123,\n        456\n    ],\n    \"date_field\": \"CREATED_DATE_UTC\",\n    \"date_from\": \"2024-12-18 00:00\",\n    \"date_to\": \"2024-12-19 00:00\"\n},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+  /reports/order-items/search/{search_id}:
+    get:
+      tags:
+      - Order Items
+      summary: Get order items report
+      description: Get an existing order items report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and a sales report having list of order items. Notice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages
+      operationId: get_order_items_search_page_reports_order_items_search__search_id__get
+      security:
+      - OAuth2PasswordBearer: []
+      parameters:
+      - name: search_id
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+          title: Search Id
+      - name: page
+        in: query
+        required: false
+        schema:
+          type: integer
+          default: 0
+          title: Page
+      - name: included_fields
+        in: query
+        required: false
+        schema:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderItemIncludedField'
+          description: Optional fields to include in the response
+          title: Included Fields
+        description: Optional fields to include in the response
+      - name: user-id-to-impersonate
+        in: header
+        required: false
+        schema:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          description: User id from the user that you want to impersonate
+          title: User-Id-To-Impersonate
+        description: User id from the user that you want to impersonate
+      responses:
+        '200':
+          description: Search was obtained successfully
+          content:
+            application/json:
+              schema:
+                anyOf:
+                - $ref: '#/components/schemas/Search_Order_OrderItemParams_-Output'
+                - $ref: '#/components/schemas/SearchStatus'
+                title: Response Get Order Items Search Page Reports Order Items Search  Search Id  Get
+                $ref: '#/components/schemas/Search_Order_OrderItemParams_-Input'
+        '202':
+          description: Request is still running asynchronously.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchStatus'
+        '403':
+          description: Forbidden
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: 'User test@example.com is not allowed to access the following fields: ''forbidden_field_1'', ''forbidden_field_2'''
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: ForbiddenAccessToFieldError
+                  type: object
+        '404':
+          description: Not Found
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: SearchIdNotFoundError
+                  type: object
+        '400':
+          description: Bad Request
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      example: Search ID 1234 is not valid
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidSearchIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Invalid partition parameter. The partition must be long type parsable and between 0 and 1, but 2 is specified.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: InvalidPageIdError
+                  type: object
+                - properties:
+                    detail:
+                      example: Response is too large. Please apply filters to reduce its size.
+                      title: Detail
+                      type: string
+                  required:
+                  - detail
+                  title: ResponseTooLargeError
+                  type: object
+        '408':
+          description: Request Timeout
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: The request timed out. Please try again later
+                      example: The request timed out. Please try again later
+                      title: Detail
+                      type: string
+                  title: RequestTimeoutError
+                  type: object
+        '410':
+          description: Search expired
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Search expired. Please create a new one
+                      example: Search expired. Please create a new one
+                      title: Detail
+                      type: string
+                  title: SearchExpiredError
+                  type: object
+        '429':
+          description: Too Many Requests
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: Server is busy. Please retry your query later
+                      example: Server is busy. Please retry your query later
+                      title: Detail
+                      type: string
+                  title: ServerBusyError
+                  type: object
+        '500':
+          description: Internal Server Error
+          content:
+            application/json:
+              schema:
+                oneOf:
+                - properties:
+                    detail:
+                      default: An internal server error occurred. Please try again later
+                      example: An internal server error occurred. Please try again later
+                      title: Detail
+                      type: string
+                  title: InternalServerError
+                  type: object
+        '422':
+          description: Validation Error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HTTPValidationError'
+      x-codeSamples:
+      - lang: bash
+        source: '
+
+          curl -X GET "https://<HOSTNAME>/v1/reports/order-items/search/<SEARCH_ID>?page=0" \
+
+          -H "Authorization: Bearer <YOUR_ACCESS_TOKEN>"
+
+          '
+        label: curl
+      - lang: python
+        source: "\nimport requests\n\nhostname = \"<HOSTNAME>\"\nusername = \"<USERNAME>\"\npassword = \"<PASSWORD>\"\n\naccess_token = requests.post(f\"https://{hostname}/v1/auth/token\", data={\"username\": username, \"password\": password}).json()[\"access_token\"]\n\nrequests.get(f\"https://{hostname}/v1/reports/order-items/search/<SEARCH_ID>\",\n    params={'page': 0},\n    headers={\"Authorization\": f\"Bearer {access_token}\"}\n)\n"
+        label: Python
+components:
+  schemas:
+    Plan-Input:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Plan ID
+          example: 1234
+        gallery:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/GalleryResource'
+            type: array
+          - type: 'null'
+          title: Gallery
+          description: List of gallery resources attached to the plan
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Plan name
+          example: Plan name
+        taxonomies:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/Taxonomy'
+            type: array
+          - type: 'null'
+          title: Taxonomies
+          description: List of taxonomies attached to the plan
+      type: object
+      required:
+      - id
+      title: Plan
+    Search_Order_OrderItemParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/OrderItemParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/Order-Output'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[Order, OrderItemParams]
+    Order-Output:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Unique order ID. This code groups all tickets bought in the same transaction.
+          example: 123456
+        parent_order_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Order Id
+          description: If the order comes from a reschedule, the original order ID.
+          example: 11234
+        buyer:
+          anyOf:
+          - $ref: '#/components/schemas/Buyer'
+          - type: 'null'
+          description: Order buyer information
+        created_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Created Date Utc
+          description: UTC date when the order was created
+          example: '2021-01-01 00:00:00'
+        updated_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Updated Date Utc
+          description: UTC date when the order data was last updated. It moves whenever ANY field of the (flattened) order record changes — including nested/enrichment fields such as plan name, UTM or ratings — not only order-level fields. This is the field the `UPDATED_DATE_UTC` date filter matches against, so a search by `UPDATED_DATE_UTC` and this value are always consistent. For the order's own update time, use `order_updated_date_utc`.
+          example: '2021-01-01 00:00:00'
+        order_updated_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Order Updated Date Utc
+          description: UTC date when the order itself was last updated (order-level fields only). Unlike `updated_date_utc`, it does not move when only nested/enrichment data (e.g. plan name) changes.
+          example: '2021-01-01 00:00:00'
+        surcharge:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Surcharge
+          description: Surcharge applied to the order
+          example: 0.0
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+          description: ISO3 currency of the order monetary fields
+          example: USD
+        purchase_channel:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Channel
+          description: Purchase channel where the transaction comes from
+          example: web
+        channel:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Channel
+          description: Channel slug through which this order was placed (CD_ORDER_PURCHASE_SOURCE). Join key with the `channel` field in `POST /v1/reports/channels/search`. Null when no channel is recorded on the order.
+          example: merlin-ticketmaster-uk
+        payment_method:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Method
+          description: Payment method used
+          example: credit_card
+        purchase_location_source:
+          anyOf:
+          - $ref: '#/components/schemas/PurchaseLocation'
+          - type: 'null'
+          description: Purchase location information
+        billing_zip_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Billing Zip Code
+          description: Billing ZIP Code manually fulfilled by the customer
+          example: '28001'
+        partner:
+          anyOf:
+          - $ref: '#/components/schemas/Partner'
+          - type: 'null'
+          description: Partner information
+        plan:
+          anyOf:
+          - $ref: '#/components/schemas/Plan-Output'
+          - type: 'null'
+          description: Plan information
+        coupon:
+          anyOf:
+          - $ref: '#/components/schemas/Coupon'
+          - type: 'null'
+          description: Coupon information
+        assigned_seats:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AssignedSeat'
+            type: array
+          - type: 'null'
+          title: Assigned Seats
+          description: List of assigned seats for the order
+        booking_questions:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/BookingQuestion'
+            type: array
+          - type: 'null'
+          title: Booking Questions
+          description: List of booking questions and answers for the order
+        business:
+          anyOf:
+          - $ref: '#/components/schemas/Business'
+          - type: 'null'
+          description: Business associated with the order
+        utm:
+          anyOf:
+          - $ref: '#/components/schemas/UTM'
+          - type: 'null'
+          description: UTM attributed to the order
+        order_items:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/OrderItem-Output'
+            type: array
+          - type: 'null'
+          title: Order Items
+          description: List of order items associated with this order
+        staff_notes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Staff Notes
+          description: Staff notes associated with the order
+        booked_slots:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/BookedSlot'
+            type: array
+          - type: 'null'
+          title: Booked Slots
+          description: List of booked slots (assets/rooms reserved by the cart) associated with the order
+        payment_details:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PaymentDetail'
+            type: array
+          - type: 'null'
+          title: Payment Details
+          description: Card payment details for the order. Empty/null when the order was not paid by card or no card details are recorded. Same array is denormalized across every order item belonging to the same order.
+        order_group_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Order Group Id
+          description: Groups orders from cluster tickets. All orders with the same order_group_id belong to the same purchase group (e.g., bundled tickets across multiple venues).
+          example: 12345
+        is_main_group_order:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Main Group Order
+          description: Flag indicating whether this is the main order in a group. True for the primary order, False for secondary orders in the same group.
+          example: true
+      type: object
+      required:
+      - id
+      title: Order
+    Venue:
+      properties:
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+          description: Venue city
+          example: New York
+        country:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country
+          description: Venue country
+          example: USA
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Venue name
+          example: Madison Square Garden
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+          description: Venue timezone
+          example: America/New_York
+      type: object
+      title: Venue
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    PaymentDetail:
+      properties:
+        id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Id
+          description: Transaction ID issued by the payment processor (Braintree, Stripe, ...)
+          example: tx_abc123
+        card_brand:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Card Brand
+          description: Card brand (`visa`, `mastercard`, `amex`, `discover`, ...)
+          example: visa
+        payment_method:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Method
+          description: Descriptive payment method joined from the order's payment configuration
+          example: Card
+      type: object
+      title: PaymentDetail
+    AssignedSeat:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Booking question ID
+          example: 123456
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Assigned seat name
+          example: Level 2 - Row F - Seat 227
+        seating_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seating Provider
+          description: Seating provider
+          example: seats-io
+        seating_provider_seat_reference:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seating Provider Seat Reference
+          description: Seating provider seat reference
+          example: Level 2 - Row F - Seat 227
+      type: object
+      required:
+      - id
+      title: AssignedSeat
+    B2BEndUser:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: B2B End User ID
+          example: 123456
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+          description: B2B End User email address
+          example: test@feverup.com
+        first_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: First Name
+          description: B2B End User first name
+          example: John
+        last_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Name
+          description: B2B End User last name
+          example: Doe
+      type: object
+      required:
+      - id
+      title: B2BEndUser
+    UTM:
+      properties:
+        campaign:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Campaign
+          description: UTM campaign name
+          example: summer_sale
+        content:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content
+          description: UTM content
+          example: banner_ad
+        medium:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Medium
+          description: UTM medium
+          example: cpc
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+          description: UTM source
+          example: google
+        term:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Term
+          description: UTM term
+          example: running+shoes
+        referring_domain:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Referring Domain
+          description: UTM term
+          example: https://google.com
+      type: object
+      title: UTM
+    Plan-Output:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Plan ID
+          example: 1234
+        gallery:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/GalleryResource'
+            type: array
+          - type: 'null'
+          title: Gallery
+          description: List of gallery resources attached to the plan
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Plan name
+          example: Plan name
+        taxonomies:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/Taxonomy'
+            type: array
+          - type: 'null'
+          title: Taxonomies
+          description: List of taxonomies attached to the plan
+      type: object
+      required:
+      - id
+      title: Plan
+    Business:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Business ID
+          example: 7c1caabf-85cd-42ac-96db-524b15443a7b
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Business name
+          example: Sample City Tours
+        tax_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tax Id
+          description: Tax identification number of the business
+          example: B12345678
+      type: object
+      title: Business
+    OrderItem-Output:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Unique ID of the order item
+          example: 123456
+        ticket_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ticket Id
+          description: Operational identifier of the ticket grouping order items from the same session. Provided for compatibility with transactional use cases (e.g., reschedules and transfers); it is not intended as a core reporting metric.
+          example: 334455
+        booked_slot_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Booked Slot Id
+          description: ID of the booked slot the order item was assigned to within its cart, when the activity behind the session uniquely resolves to a single booked slot (e.g. Escape This rooms). Matches `order.booked_slots[].id` for the same order. NULL when the activity exposes more than one asset and the cart engine spread parties across them; consumers can fall back to substring matching against `booked_slots[].asset.name`.
+          example: 9876543
+        cancellation_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cancellation Date Utc
+          description: Last UTC date when any part of the ticket was cancelled
+          example: '2021-01-01 00:00:00'
+        cancellation_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cancellation Type
+          description: 'Type of cancellation. REFUND: means that the ticket has been cancelled due to a refund. RESCHEDULE: means that the ticket has been cancelled due to a reschedule'
+          example: REFUND
+        created_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Created Date Utc
+          description: UTC date of the ticket creation
+          example: '2021-01-01 00:00:00'
+        discount:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Discount
+          description: Discount applied to the ticket
+          example: 10.0
+        is_invite:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Invite
+          description: Indicates whether the ticket is an invitation from the partner
+          example: false
+        modified_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Modified Date Utc
+          description: UTC date of the last modification of the ticket
+          example: '2021-01-01 00:00:00'
+        purchase_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Utc
+          description: UTC date of the ticket purchase
+          example: '2021-01-01 00:00:00'
+        event_start_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Utc
+          description: UTC start date of the event associated with this order item
+          example: '2021-01-01 00:00:00'
+        validated_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Validated Date Utc
+          description: UTC date when the order item was validated. This validation can be independent of the plan code (bar code), since some order items don't have a plan code but can be validated
+          example: '2021-01-01 00:00:00'
+        rating_comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rating Comment
+          description: Comment from the ticket user after attending the event
+          example: Great experience!
+        rating_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rating Value
+          description: Rating given by the ticket user after attending the event, ranging from 1 to 5
+          example: 5.0
+        surcharge:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Surcharge
+          description: Surcharge applied to the ticket
+          example: 2.0
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+          description: 'If the ticket is active, transferred, or cancelled. ACTIVE: means that the ticket ID can be redeemed or it is redeemed. CANCELLED: means that the ticket ID can''t be redeemed since it has been cancelled. TRANSFERRED: means that the ticket ID can''t be used since it has been fully transferred to another user'
+          example: ACTIVE
+        unitary_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Unitary Price
+          description: Unitary price of the purchased ticket
+          example: 50.0
+        owner:
+          anyOf:
+          - $ref: '#/components/schemas/Owner'
+          - type: 'null'
+          description: Order item owner information
+        pack:
+          anyOf:
+          - $ref: '#/components/schemas/Pack'
+          - type: 'null'
+          description: Pack information if the order item belongs to a pack
+        plan_code:
+          anyOf:
+          - $ref: '#/components/schemas/PlanCode'
+          - type: 'null'
+          description: Plan code associated with the order item
+        session:
+          anyOf:
+          - $ref: '#/components/schemas/Session'
+          - type: 'null'
+          description: Session information
+        metadata:
+          anyOf:
+          - $ref: '#/components/schemas/Metadata'
+          - type: 'null'
+          description: Optional metadata supplied by the partner's integration when the order was placed, intended to support reconciliation against the partner's own system of record (external IDs for the order item and, when applicable, the subproduct it belongs to). Only returned when explicitly requested via `included_fields=metadata`; omitted by default to keep payloads compact for partners who don't need it. NULL when the partner did not provide any reporting metadata for the order item. See the `Metadata` schema for the full list of fields.
+      type: object
+      title: OrderItem
+    Search_Order_OrderItemParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/OrderItemParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/Order-Input'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[Order, OrderItemParams]
+    SearchStatus:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
+          type: string
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
+      type: object
+      required:
+      - message
+      - search_id
+      title: SearchStatus
+    Owner:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Owner ID
+          example: '123456'
+        date_of_birthday:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Date Of Birthday
+          description: Owner date of birth
+          example: '1990-01-01'
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+          description: Owner email address
+          example: test@example.com
+        first_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: First Name
+          description: Owner first name
+          example: John
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+          description: Owner language, extracted from the device locale. The format is ISO 639-1 (two letters).
+          example: es
+        last_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Name
+          description: Owner last name
+          example: Doe
+        marketing_preference:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Marketing Preference
+          description: Owner marketing preference
+          example: true
+      type: object
+      required:
+      - id
+      title: Owner
+    BookedSlotActivity:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Activity ID
+          example: 481
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Activity name
+          example: Escape Room Northbridge
+      type: object
+      title: BookedSlotActivity
+    BookingQuestion:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Booking question ID
+          example: '123456'
+        question:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Question
+          description: Booking question
+          example: How did you find out about this experience?
+        answers:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Answers
+          description: Booking question answers
+          example:
+          - Instagram
+          - Facebook
+        index:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Index
+          description: Booking question index. It allows to relate the answers of independent questions
+          example: 1
+      type: object
+      required:
+      - id
+      title: BookingQuestion
+    Coupon:
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Coupon name
+          example: ''
+        code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Code
+          description: Coupon code
+          example: '-'
+        discount:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Discount
+          description: Coupon discount
+          example: 0
+        kind:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Kind
+          description: Coupon kind
+          example: No Coupons
+      type: object
+      title: Coupon
+    GalleryResource:
+      properties:
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+          description: Gallery resource URL
+          example: https://www.example.com/image.jpg
+        type:
+          $ref: '#/components/schemas/GalleryResourceType'
+          description: Gallery resource type (image or video)
+          example: image
+      type: object
+      required:
+      - type
+      title: GalleryResource
+    OrderItem-Input:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Unique ID of the order item
+          example: 123456
+        ticket_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Ticket Id
+          description: Operational identifier of the ticket grouping order items from the same session. Provided for compatibility with transactional use cases (e.g., reschedules and transfers); it is not intended as a core reporting metric.
+          example: 334455
+        booked_slot_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Booked Slot Id
+          description: ID of the booked slot the order item was assigned to within its cart, when the activity behind the session uniquely resolves to a single booked slot (e.g. Escape This rooms). Matches `order.booked_slots[].id` for the same order. NULL when the activity exposes more than one asset and the cart engine spread parties across them; consumers can fall back to substring matching against `booked_slots[].asset.name`.
+          example: 9876543
+        cancellation_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cancellation Date Utc
+          description: Last UTC date when any part of the ticket was cancelled
+          example: '2021-01-01 00:00:00'
+        cancellation_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cancellation Type
+          description: 'Type of cancellation. REFUND: means that the ticket has been cancelled due to a refund. RESCHEDULE: means that the ticket has been cancelled due to a reschedule'
+          example: REFUND
+        created_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Created Date Utc
+          description: UTC date of the ticket creation
+          example: '2021-01-01 00:00:00'
+        discount:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Discount
+          description: Discount applied to the ticket
+          example: 10.0
+        is_invite:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Invite
+          description: Indicates whether the ticket is an invitation from the partner
+          example: false
+        modified_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Modified Date Utc
+          description: UTC date of the last modification of the ticket
+          example: '2021-01-01 00:00:00'
+        purchase_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Utc
+          description: UTC date of the ticket purchase
+          example: '2021-01-01 00:00:00'
+        event_start_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Utc
+          description: UTC start date of the event associated with this order item
+          example: '2021-01-01 00:00:00'
+        validated_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Validated Date Utc
+          description: UTC date when the order item was validated. This validation can be independent of the plan code (bar code), since some order items don't have a plan code but can be validated
+          example: '2021-01-01 00:00:00'
+        rating_comment:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Rating Comment
+          description: Comment from the ticket user after attending the event
+          example: Great experience!
+        rating_value:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Rating Value
+          description: Rating given by the ticket user after attending the event, ranging from 1 to 5
+          example: 5.0
+        surcharge:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Surcharge
+          description: Surcharge applied to the ticket
+          example: 2.0
+        status:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Status
+          description: 'If the ticket is active, transferred, or cancelled. ACTIVE: means that the ticket ID can be redeemed or it is redeemed. CANCELLED: means that the ticket ID can''t be redeemed since it has been cancelled. TRANSFERRED: means that the ticket ID can''t be used since it has been fully transferred to another user'
+          example: ACTIVE
+        unitary_price:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Unitary Price
+          description: Unitary price of the purchased ticket
+          example: 50.0
+        owner:
+          anyOf:
+          - $ref: '#/components/schemas/Owner'
+          - type: 'null'
+          description: Order item owner information
+        pack:
+          anyOf:
+          - $ref: '#/components/schemas/Pack'
+          - type: 'null'
+          description: Pack information if the order item belongs to a pack
+        plan_code:
+          anyOf:
+          - $ref: '#/components/schemas/PlanCode'
+          - type: 'null'
+          description: Plan code associated with the order item
+        session:
+          anyOf:
+          - $ref: '#/components/schemas/Session'
+          - type: 'null'
+          description: Session information
+        metadata:
+          anyOf:
+          - $ref: '#/components/schemas/Metadata'
+          - type: 'null'
+          description: Optional metadata supplied by the partner's integration when the order was placed, intended to support reconciliation against the partner's own system of record (external IDs for the order item and, when applicable, the subproduct it belongs to). Only returned when explicitly requested via `included_fields=metadata`; omitted by default to keep payloads compact for partners who don't need it. NULL when the partner did not provide any reporting metadata for the order item. See the `Metadata` schema for the full list of fields.
+      type: object
+      title: OrderItem
+    PlanCode:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Plan code ID
+          example: 12345
+        created_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Created Date Utc
+          description: Plan code creation date
+          example: '2023-12-18 08:30:27.789 Z'
+        is_cancelled:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Cancelled
+          description: Plan code cancellation status
+          example: false
+        is_used:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Used
+          description: Whether if the plan code has been used by a ticket or not
+          deprecated: true
+          example: false
+        is_validated:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Validated
+          description: Whether if the plan code has been validated or not
+          example: false
+        modified_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Modified Date Utc
+          description: Plan code modification date
+          example: '2023-12-18 08:30:27.789 Z'
+        redeemed_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Redeemed Date Utc
+          description: Plan code redemption date
+          example: '2023-12-18 08:30:27.789 Z'
+        cd_barcode:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Cd Barcode
+          description: Plan code barcode
+          example: '1234567890123'
+        applied_order_id_list:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Applied Order Id List
+          description: List of order IDs for which the gift card was applied
+          example:
+          - 12345
+      type: object
+      required:
+      - id
+      title: PlanCode
+    Pack:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Unique identifier of the order item pack
+          example: 789012
+        session_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Session Id
+          description: Unique identifier of the pack session in the catalog (matches the id returned by the Sessions endpoint). Stable across all purchases of the same pack session. Use this instead of session_name, which is not unique.
+          example: 284360344
+        session_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Session Name
+          description: Label of the session pack
+          example: Family Package
+      type: object
+      title: Pack
+    GalleryResourceType:
+      type: string
+      enum:
+      - image
+      - video
+      title: GalleryResourceType
+    Buyer:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Buyer ID
+          example: '123456'
+        date_of_birthday:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Date Of Birthday
+          description: Buyer date of birth
+          example: '1990-01-01'
+        email:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Email
+          description: Buyer email address
+          example: test@example.com
+        first_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: First Name
+          description: Buyer first name
+          example: John
+        language:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Language
+          description: Buyer language, extracted from the device locale. The format is ISO 639-1 (two letters).
+          example: es
+        last_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Last Name
+          description: Buyer last name
+          example: Doe
+        marketing_preference:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Marketing Preference
+          description: Buyer marketing preference
+          example: true
+        b2b_end_user:
+          anyOf:
+          - $ref: '#/components/schemas/B2BEndUser'
+          - type: 'null'
+          description: B2B end user information
+      type: object
+      required:
+      - id
+      title: Buyer
+    OrderItemParams:
+      properties:
+        order_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Order Ids
+          description: List of ids of the orders to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        date_field:
+          anyOf:
+          - type: string
+            enum:
+            - CREATED_DATE_UTC
+            - UPDATED_DATE_UTC
+            - EVENT_START_DATE_UTC
+          - type: 'null'
+          title: Date Field
+          description: Date field to filter the search
+          example: CREATED_DATE_UTC
+        date_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Date From
+          description: Start date for the selected date field. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-18 00:00
+        date_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Date To
+          description: End date for the selected date field. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-19 00:00
+      additionalProperties: false
+      type: object
+      title: OrderItemParams
+    PurchaseLocation:
+      properties:
+        id_geo_name:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id Geo Name
+          description: ID of the geo name from where the purchase was made. This field is inferred so it might not be accurate. More information at https://www.geonames.org/about.html
+          example: 123456
+        city_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City Name
+          description: City from where the purchase was made. This field is inferred so it might not be accurate.
+          example: Sunnyvale
+        country_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country Code
+          description: Country code from where the purchase was made. This field is inferred so it might not be accurate.
+          example: US
+        region_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region Code
+          description: Region code from where the purchase was made. This field is inferred so it might not be accurate.
+          example: CA
+        postal_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Postal Code
+          description: Postal code from where the purchase was made. This field is inferred so it might not be accurate.
+          example: '94043'
+        quality:
+          anyOf:
+          - $ref: '#/components/schemas/PurchaseLocationQuality'
+          - type: 'null'
+          description: Quality of the purchase location. Its value depends on the source it was inferred from.
+          examples:
+          - MEDIUM
+          - HIGH
+      type: object
+      title: PurchaseLocation
+    PartitionInfo:
+      properties:
+        partition_num:
+          type: integer
+          minimum: 0.0
+          title: Partition Num
+          description: Partition number
+          example: 0
+        endpoint:
+          type: string
+          title: Endpoint
+          description: Endpoint to fetch data for partition
+          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        size:
+          type: integer
+          minimum: 0.0
+          title: Size
+          description: Partition size in bytes
+          example: 15058
+        rows:
+          type: integer
+          minimum: 0.0
+          title: Rows
+          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
+          example: 4099
+      type: object
+      required:
+      - partition_num
+      - endpoint
+      - size
+      - rows
+      title: PartitionInfo
+      examples:
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        partition_num: 0
+        rows: 4099
+        size: 15058
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
+        partition_num: 1
+        rows: 3145
+        size: 11260
+    Order-Input:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Unique order ID. This code groups all tickets bought in the same transaction.
+          example: 123456
+        parent_order_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Order Id
+          description: If the order comes from a reschedule, the original order ID.
+          example: 11234
+        buyer:
+          anyOf:
+          - $ref: '#/components/schemas/Buyer'
+          - type: 'null'
+          description: Order buyer information
+        created_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Created Date Utc
+          description: UTC date when the order was created
+          example: '2021-01-01 00:00:00'
+        updated_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Updated Date Utc
+          description: UTC date when the order data was last updated. It moves whenever ANY field of the (flattened) order record changes — including nested/enrichment fields such as plan name, UTM or ratings — not only order-level fields. This is the field the `UPDATED_DATE_UTC` date filter matches against, so a search by `UPDATED_DATE_UTC` and this value are always consistent. For the order's own update time, use `order_updated_date_utc`.
+          example: '2021-01-01 00:00:00'
+        order_updated_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Order Updated Date Utc
+          description: UTC date when the order itself was last updated (order-level fields only). Unlike `updated_date_utc`, it does not move when only nested/enrichment data (e.g. plan name) changes.
+          example: '2021-01-01 00:00:00'
+        surcharge:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Surcharge
+          description: Surcharge applied to the order
+          example: 0.0
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+          description: ISO3 currency of the order monetary fields
+          example: USD
+        purchase_channel:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Channel
+          description: Purchase channel where the transaction comes from
+          example: web
+        channel:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Channel
+          description: Channel slug through which this order was placed (CD_ORDER_PURCHASE_SOURCE). Join key with the `channel` field in `POST /v1/reports/channels/search`. Null when no channel is recorded on the order.
+          example: merlin-ticketmaster-uk
+        payment_method:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Method
+          description: Payment method used
+          example: credit_card
+        purchase_location_source:
+          anyOf:
+          - $ref: '#/components/schemas/PurchaseLocation'
+          - type: 'null'
+          description: Purchase location information
+        billing_zip_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Billing Zip Code
+          description: Billing ZIP Code manually fulfilled by the customer
+          example: '28001'
+        partner:
+          anyOf:
+          - $ref: '#/components/schemas/Partner'
+          - type: 'null'
+          description: Partner information
+        plan:
+          anyOf:
+          - $ref: '#/components/schemas/Plan-Input'
+          - type: 'null'
+          description: Plan information
+        coupon:
+          anyOf:
+          - $ref: '#/components/schemas/Coupon'
+          - type: 'null'
+          description: Coupon information
+        assigned_seats:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AssignedSeat'
+            type: array
+          - type: 'null'
+          title: Assigned Seats
+          description: List of assigned seats for the order
+        booking_questions:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/BookingQuestion'
+            type: array
+          - type: 'null'
+          title: Booking Questions
+          description: List of booking questions and answers for the order
+        business:
+          anyOf:
+          - $ref: '#/components/schemas/Business'
+          - type: 'null'
+          description: Business associated with the order
+        utm:
+          anyOf:
+          - $ref: '#/components/schemas/UTM'
+          - type: 'null'
+          description: UTM attributed to the order
+        order_items:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/OrderItem-Input'
+            type: array
+          - type: 'null'
+          title: Order Items
+          description: List of order items associated with this order
+        staff_notes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Staff Notes
+          description: Staff notes associated with the order
+        booked_slots:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/BookedSlot'
+            type: array
+          - type: 'null'
+          title: Booked Slots
+          description: List of booked slots (assets/rooms reserved by the cart) associated with the order
+        payment_details:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PaymentDetail'
+            type: array
+          - type: 'null'
+          title: Payment Details
+          description: Card payment details for the order. Empty/null when the order was not paid by card or no card details are recorded. Same array is denormalized across every order item belonging to the same order.
+        order_group_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Order Group Id
+          description: Groups orders from cluster tickets. All orders with the same order_group_id belong to the same purchase group (e.g., bundled tickets across multiple venues).
+          example: 12345
+        is_main_group_order:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Main Group Order
+          description: Flag indicating whether this is the main order in a group. True for the primary order, False for secondary orders in the same group.
+          example: true
+      type: object
+      required:
+      - id
+      title: Order
+    Taxonomy:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Taxonomy ID
+          example: 1234
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Taxonomy name
+          example: Taxonomy name
+      type: object
+      required:
+      - id
+      title: Taxonomy
+    OrderItemIncludedField:
+      type: string
+      enum:
+      - booked_slots
+      - staff_notes
+      - metadata
+      title: OrderItemIncludedField
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    PurchaseLocationQuality:
+      type: string
+      enum:
+      - HIGH
+      - MEDIUM
+      - UNKNOWN
+      title: PurchaseLocationQuality
+    Session:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Session ID
+          example: 12345
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Session name
+          example: Session name
+        available_tickets:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Available Tickets
+          description: Session available tickets. This field is always null if the session is a wait list.
+          example: 10
+        capacity:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Capacity
+          description: Session capacity. This field is always null if the session is a wait list.
+          example: 100
+        end_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: End Date Utc
+          description: Session end date
+          example: '2023-12-18 08:30:27.789 Z'
+        first_purchasable_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: First Purchasable Date Utc
+          description: Session first purchasable date
+          example: '2023-12-18'
+        is_addon:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Addon
+          description: Is the session an addon
+          example: false
+        is_shop_product:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Shop Product
+          description: Is the session a shop product
+          example: false
+        is_wait_list:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Wait List
+          description: Is the session a wait list. Deprecated, since now the waitlist flag is configured at plan level
+          deprecated: true
+          example: false
+        start_date_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Start Date Utc
+          description: Session start date
+          example: '2023-12-18 08:30:27.789 Z'
+        venue:
+          anyOf:
+          - $ref: '#/components/schemas/Venue'
+          - type: 'null'
+          description: Session venue
+      type: object
+      required:
+      - id
+      title: Session
+    Partner:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Partner ID
+          example: 1234
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Partner name
+          example: Partner 1
+      type: object
+      required:
+      - id
+      title: Partner
+    BookedSlotAsset:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Asset ID (e.g. an Escape This room)
+          example: 3473
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Asset name
+          example: NB - Asylum
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+          description: Asset description
+        availability_strategy:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Availability Strategy
+          description: Capacity strategy used by the asset (BY_PARTY_COUNT or BY_PEOPLE_COUNT)
+          example: BY_PARTY_COUNT
+        max_party_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Party Size
+          description: Maximum number of people allowed in a single party
+          example: 4
+        min_party_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Min Party Size
+          description: Minimum number of people required to book a party
+          example: 1
+        max_num_parties:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Num Parties
+          description: Maximum number of independent parties the asset can host
+          example: 1
+        partner_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Partner Id
+          description: Partner that owns the asset
+          example: 190
+        asset_type_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Asset Type Id
+          description: Asset type ID
+          example: 7
+        is_manual_assignment_confirmation_required:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Manual Assignment Confirmation Required
+          description: Whether the asset requires manual assignment confirmation
+          example: false
+      type: object
+      title: BookedSlotAsset
+    BookedSlot:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Unique ID of the booked slot. Matches `order_item.booked_slot_id` for every order item assigned to this slot.
+          example: 9876543
+        timeslot_utc:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timeslot Utc
+          description: UTC start of the timeslot the slot is booked for
+          example: '2026-05-08 09:30:00'
+        slot_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Slot Count
+          description: Capacity counter from the cart engine. Useful for debugging only — see `party_size` for the actual people booked.
+          example: 12
+        occupancy_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Occupancy Count
+          description: Number of independent parties booked at the asset for this cart
+          example: 1
+        party_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Party Size
+          description: Total people (count of order items) sold for this booked slot
+          example: 4
+        is_removed:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Removed
+          description: Whether the slot was removed by the cart engine
+          example: false
+        activity:
+          anyOf:
+          - $ref: '#/components/schemas/BookedSlotActivity'
+          - type: 'null'
+          description: Activity that owns the booked asset
+        asset:
+          anyOf:
+          - $ref: '#/components/schemas/BookedSlotAsset'
+          - type: 'null'
+          description: Asset (e.g. room) the slot is booked on
+      type: object
+      title: BookedSlot
+    Metadata:
+      properties:
+        external_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: External Id
+          description: Partner-supplied external identifier for the order item, as sent by the partner's integration when the order was placed. Sourced from the order item's `METADATA.reporting.external_id` field on the upstream record. Useful when the partner needs to reconcile Fever order items against rows in their own system of record (e.g., box-office ticket IDs, internal SKUs). NULL when the partner did not provide one.
+          example: CJ51001B
+        external_subproduct_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: External Subproduct Id
+          description: Partner-supplied external subproduct identifier for the order item, used when a single plan exposes multiple distinguishable subproducts (e.g., adult vs. child ticket variants, add-ons, seating categories). Sourced from the order item's `METADATA.reporting.external_subproduct_id` field on the upstream record. NULL when the partner did not provide one or the plan has no subproducts.
+          example: ADULTO
+      type: object
+      title: Metadata
+  securitySchemes:
+    OAuth2PasswordBearer:
+      type: oauth2
+      flows:
+        password:
+          scopes: {}
+          tokenUrl: /v1/auth/token
+x-tagGroups:
+- name: Endpoints
+  tags:
+  - Authentication
+  - Billing L1
+  - Billing L2
+  - Carts
+  - Channels
+  - Customers
+  - Customers Mapping
+  - Deposits
+  - Entitlement Configurations
+  - Exchange Rates
+  - FeverZone
+  - Last Tour
+  - Magnati
+  - Neon
+  - Order Items
+  - Order Items Test
+  - Order Sales
+  - Plan Code Scans
+  - Plans
+  - Real Time
+  - Reservations
+  - SailGP
+  - Sessions
+  - Square
+  - Webhooks
