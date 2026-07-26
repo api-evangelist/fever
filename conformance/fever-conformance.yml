@@ -1,0 +1,22 @@
+generated: '2026-07-19'
+method: derived
+source: openapi/fever-reporting-api-openapi-original.json
+standards:
+- id: oauth2
+  conforms: true
+  evidence: OpenAPI securityScheme type oauth2 (password flow); MCP gateway oauth2 authorization_code + PKCE
+- id: oidc
+  conforms: partial
+  evidence: MCP OAuth authorization-server advertises openid scope and code flow; no full openid-configuration document
+- id: openapi-3.0
+  conforms: true
+  evidence: openapi 3.0.0 document published at data-reporting-api.prod.feverup.com/v1/openapi.json
+- id: rfc9457-problem-details
+  conforms: false
+  evidence: errors use FastAPI detail envelope, not application/problem+json
+- id: rfc8414-oauth-as-metadata
+  conforms: true
+  evidence: /.well-known/oauth-authorization-server returns RFC 8414 metadata
+- id: pkce-rfc7636
+  conforms: true
+  evidence: code_challenge_methods_supported includes S256

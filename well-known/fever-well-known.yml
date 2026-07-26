@@ -1,0 +1,32 @@
+generated: '2026-07-19'
+method: searched
+source: live probes of Fever API + MCP hosts
+hosts:
+- host: https://data-search.apigw.feverup.com
+  documents:
+  - path: /.well-known/oauth-authorization-server   # RFC 8414 (MCP OAuth AS)
+    status: 200
+    file: fever-oauth-authorization-server.json
+  - path: /.well-known/openid-configuration
+    status: 404
+  - path: /.well-known/security.txt
+    status: 404
+  - path: /.well-known/api-catalog
+    status: 404
+  - path: /.well-known/ai-plugin.json
+    status: 404
+- host: https://developer.feverup.com
+  documents:
+  - path: /llms.txt
+    status: 200
+    note: reachable but returns an empty (0-byte) body; no llms.txt content published
+  - path: /.well-known/security.txt
+    status: 301
+- host: https://www.feverup.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 301
+- host: https://data-reporting-api.prod.feverup.com
+  documents:
+  - path: /.well-known/security.txt
+    status: 403

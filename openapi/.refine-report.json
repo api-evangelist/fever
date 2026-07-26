@@ -1,0 +1,22 @@
+{
+  "provider": "fever",
+  "sources": [
+    "fever-authentication-api-openapi.yml",
+    "fever-feverzone-api-openapi.yml",
+    "fever-order-items-api-openapi.yml",
+    "fever-plans-api-openapi.yml",
+    "fever-sessions-api-openapi.yml"
+  ],
+  "outputs": [
+    "fever-authentication-api-openapi.yml",
+    "fever-feverzone-api-openapi.yml",
+    "fever-order-items-api-openapi.yml",
+    "fever-plans-api-openapi.yml",
+    "fever-sessions-api-openapi.yml"
+  ],
+  "archived": [],
+  "errors": [],
+  "warnings": [],
+  "notes": [],
+  "skipped": []
+}

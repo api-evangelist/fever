@@ -1,0 +1,41 @@
+generated: '2026-07-19'
+method: derived
+source: openapi/fever-reporting-api-openapi-original.json
+format: http-status
+envelope:
+  note: >-
+    FastAPI-style error envelope. Validation errors (422) return an object with
+    a `detail[]` array of {loc, msg, type} entries (HTTPValidationError schema).
+    Not RFC 9457 application/problem+json.
+problems:
+- status: 400
+  title: Bad Request
+  meaning: Malformed request or invalid search parameters.
+  operations: [search_plans, search_sessions, search_order_items]
+- status: 403
+  title: Forbidden
+  meaning: Authenticated principal lacks access to the requested resource.
+- status: 404
+  title: Not Found
+  meaning: The referenced search_id or resource does not exist.
+- status: 408
+  title: Request Timeout
+  meaning: The asynchronous search did not complete within the server window.
+- status: 410
+  title: Search expired
+  meaning: >-
+    The search result set referenced by search_id has expired; re-issue the
+    original POST /search to obtain a fresh search_id.
+- status: 422
+  title: Validation Error
+  meaning: >-
+    Request body failed schema validation; `detail[]` lists offending fields
+    via HTTPValidationError.
+  schema: HTTPValidationError
+- status: 429
+  title: Too Many Requests
+  meaning: >-
+    Rate limit exceeded (20 req/min on auth endpoints, 200 req/min otherwise).
+- status: 500
+  title: Internal Server Error
+  meaning: Unexpected server-side error.

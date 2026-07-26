@@ -1,0 +1,16 @@
+generated: '2026-07-19'
+method: generated
+skills:
+- file: fever-extract-order-items.md
+  name: Extract Fever order-item sales data
+  api: openapi/fever-reporting-api-openapi-original.json
+  operations:
+  - create_token_auth_token_post
+  - search_order_items_reports_order_items_search_post
+  - get_order_items_search_page_reports_order_items_search__search_id__get
+- file: fever-search-events-mcp.md
+  name: Search Fever events via MCP
+  api: mcp/fever-mcp.yml
+  operations:
+  - search_cities
+  - search_events

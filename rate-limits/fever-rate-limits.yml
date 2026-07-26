@@ -1,0 +1,16 @@
+generated: '2026-07-19'
+method: searched
+source: https://data-reporting-api.prod.feverup.com/v1/redoc
+enforcement: HTTP 429 Too Many Requests
+signal:
+  note: Rate limits documented in the Reporting API reference; header exposure not documented.
+rate_limits:
+- scope: authentication
+  paths: [/v1/auth/token]
+  limit_count: 20
+  window: 1m
+- scope: default
+  paths: ['*']
+  limit_count: 200
+  window: 1m
+contact: data-ai@feverup.com

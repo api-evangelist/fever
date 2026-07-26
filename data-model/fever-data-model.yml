@@ -1,0 +1,67 @@
+generated: '2026-07-19'
+method: derived
+source: openapi/fever-reporting-api-openapi-original.json
+note: >-
+  Entity graph derived from OpenAPI component schema $ref links in the Fever
+  Reporting API. Order is the root sales entity; OrderItem is the per-ticket
+  line; Plan and Session describe the experience and its time slot.
+entities:
+- name: Order
+  description: A partner sales order on Fever.
+  relationships:
+  - has_many: OrderItem
+    via: order_items
+  - has_one: Buyer
+    via: buyer
+  - has_one: Plan
+    via: plan
+  - has_one: PaymentDetail
+    via: payment_detail
+  - has_one: Partner
+    via: partner
+  - has_one: Business
+    via: business
+  - has_many: Coupon
+    via: coupons
+  - has_one: PurchaseLocation
+    via: purchase_location
+- name: OrderItem
+  description: An individual ticket / line item within an order.
+  relationships:
+  - has_one: Session
+    via: session
+  - has_one: Pack
+    via: pack
+  - has_one: PlanCode
+    via: plan_code
+  - has_one: Owner
+    via: owner
+  - has_one: Metadata
+    via: metadata
+- name: Plan
+  description: An experience / event plan sold on Fever.
+  relationships:
+  - has_many: GalleryResource
+    via: gallery
+  - has_one: Taxonomy
+    via: taxonomy
+- name: Session
+  description: A dated time-slot of a plan.
+  relationships:
+  - has_one: Venue
+    via: venue
+- name: Buyer
+  description: The purchasing customer.
+  relationships:
+  - has_one: B2BEndUser
+    via: b2b_end_user
+- name: SalesSummary
+  description: Aggregated FeverZone sales-summary row.
+  relationships:
+  - has_one: Currency
+    via: currency
+- name: SalesByReseller
+  description: Aggregated sales grouped by reseller.
+  relationships:
+  - has_one: Reseller
+    via: reseller

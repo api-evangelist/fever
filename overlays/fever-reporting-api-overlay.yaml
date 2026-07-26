@@ -1,0 +1,18 @@
+overlay: 1.0.0
+info:
+  title: API Evangelist enhancements for Fever Reporting API
+  version: 1.0.0
+extends: openapi/fever-reporting-api-openapi-original.json
+actions:
+- target: $.info
+  update:
+    x-apievangelist-async-pattern: submit-then-poll (POST /search -> 202 search_id -> GET /search/{search_id})
+    x-apievangelist-pagination: partitioned via partition_info[] + ?page=
+    x-apievangelist-status-page: https://status.data-reporting-api.prod.feverup.com/
+    x-apievangelist-rate-limits: 20/min auth, 200/min default
+    x-apievangelist-conventions: conventions/fever-conventions.yml
+    x-apievangelist-errors: errors/fever-problem-types.yml
+- target: $.info
+  update:
+    x-apievangelist-mcp-server: https://data-search.apigw.feverup.com/mcp/
+    x-apievangelist-scope: reporting-only (not for real-time access-control or inventory)

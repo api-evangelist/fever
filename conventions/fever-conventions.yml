@@ -1,0 +1,45 @@
+generated: '2026-07-19'
+method: searched
+source: openapi/fever-reporting-api-openapi-original.json
+docs: https://developer.feverup.com/en/
+authentication:
+  style: oauth2-bearer
+  detail: >-
+    OAuth2 password flow. POST /v1/auth/token with username/password returns an
+    access_token; send as `Authorization: Bearer <token>` on all requests.
+  ref: authentication/fever-authentication.yml
+async_search:
+  style: submit-then-poll
+  detail: >-
+    Reporting queries are asynchronous. POST /{resource}/search returns 202 with
+    a `search_id` while running. Poll GET /{resource}/search/{search_id} until it
+    returns 200 with data; a 410 means the search_id has expired and the POST
+    must be re-issued.
+pagination:
+  style: partitioned
+  request_params: [page]
+  response_fields: [data, partition_info]
+  detail: >-
+    A completed search returns `partition_info[]` describing each partition
+    (partition_num, rows). Fetch page 0 first, then request each additional
+    partition via ?page=<partition_num> and concatenate `data`.
+versioning:
+  scheme: uri-path
+  current: v1
+  ref: lifecycle/fever-lifecycle.yml
+error_envelope:
+  format: fastapi-detail
+  detail: >-
+    Errors return an object with a `detail` field (string, or an array of
+    {loc,msg,type} for 422 validation errors). Not RFC 9457.
+  ref: errors/fever-problem-types.yml
+rate_limiting:
+  detail: >-
+    20 requests/minute on authentication endpoints; 200 requests/minute on all
+    other endpoints. Exceeding returns HTTP 429.
+  ref: rate-limits/fever-rate-limits.yml
+idempotency:
+  supported: false
+  note: >-
+    No idempotency-key header/parameter is documented. Reads are naturally
+    idempotent; there are no write operations in the Reporting API.
