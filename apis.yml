@@ -1398,6 +1398,8 @@ apis:
   - type: Authentication
     url: authentication/fever-authentication.yml
 common:
+- type: Overlay
+  url: overlays/fever-reporting-api-overlay.yaml
 - type: DeveloperPortal
   url: https://developer.feverup.com/en/
 - type: Documentation
