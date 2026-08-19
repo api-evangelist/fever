@@ -1,0 +1,222 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Fever - Reporting Authentication FeverZone API",
+    "version": "1.5.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "FeverZone",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Request FeverZone sales summary report",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/feverzone/sales-summary/search",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Create a request to get a new FeverZone sales summary report within the given time range.The field plan_ids can be used to include only certain plans in the report.If empty, the sales summary report will refer to all plans.The search will be processed asynchronously, being able to fetch the result from the provided search ID"
+        },
+        {
+          "info": {
+            "name": "Get FeverZone sales summary report",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/feverzone/sales-summary/search/:search_id",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "search_id",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Get an existing FeverZone sales summary report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and the report outputNotice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages"
+        },
+        {
+          "info": {
+            "name": "Request FeverZone sales by ticket type report",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/feverzone/sales-by-ticket-type/search",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Create a request to get a new FeverZone sales by ticket type report within the given time range.The field plan_ids can be used to include only certain plans in the report.If empty, the sales by ticket type report will refer to all plans.The search will be processed asynchronously, being able to fetch the result from the provided search ID"
+        },
+        {
+          "info": {
+            "name": "Get FeverZone sales by ticket type report",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/feverzone/sales-by-ticket-type/search/:search_id",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "search_id",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Get an existing FeverZone sales by ticket type report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and the report outputNotice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages"
+        },
+        {
+          "info": {
+            "name": "Request resellers",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/feverzone/sales-by-reseller/search",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Create a request to get resellers. The field reseller_ids can be used to filter the resellers by id.If empty, all resellers will be returned.The search will be processed asynchronously, being able to fetch the result from the provided search ID."
+        },
+        {
+          "info": {
+            "name": "Get sales by reseller",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/feverzone/sales-by-reseller/search/:search_id",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "search_id",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Get resellers' sales aggregated from a search_id."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

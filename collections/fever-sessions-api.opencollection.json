@@ -1,0 +1,86 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Fever - Reporting Authentication Sessions API",
+    "version": "1.5.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Sessions",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Request sessions",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/sessions/search",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Create a request to get sessions that belong to plans that are set as ready.The field session_ids can be used to filter the sessions in the report by id.The field plan_ids can be used to include only sessions from certain plans in the report.The union of the two sets will be used to filter the sessions.That is, if a session is in session_ids but its plan is not in plan_ids, it will be included, and viceversa.Optionally, the fields updated_date_utc_from and updated_date_utc_to can be used to rest"
+        },
+        {
+          "info": {
+            "name": "Get sessions",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/sessions/search/:search_id",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "search_id",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Get sessions from a search_id."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

@@ -1,0 +1,92 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Fever - Reporting Authentication Order Items API",
+    "version": "1.5.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Order Items",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Request order items report",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/reports/order-items/search",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Create a request to get a new order items report within the given time range.The search will be processed asynchronously, being able to fetch the result from the provided search ID"
+        },
+        {
+          "info": {
+            "name": "Get order items report",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/reports/order-items/search/:search_id",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "search_id",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query"
+              },
+              {
+                "name": "included_fields",
+                "value": "",
+                "type": "query",
+                "description": "Optional fields to include in the response"
+              }
+            ],
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Get an existing order items report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and a sales report having list of order items. Notice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages"
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

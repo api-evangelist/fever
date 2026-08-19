@@ -1,0 +1,3216 @@
+{
+  "item": [
+    {
+      "id": "15333886-2252-472f-9e44-59686866e05a",
+      "name": "FeverZone",
+      "description": {
+        "content": "These endpoints provide an interface to extract the data available in FeverZone reports. The delay of the data\nis less than 15 minutes from reality. The route `/feverzone/sales-by-reseller` allows the user to get a sales summary\nby reseller and can be aggregated by venues/ticket types.\n\n## Model documentation\n\n#### Sales\n\nThis endpoint returns a summary of the sales, aligned with FeverZone Sales Summary report. It allows to filter by\n`plan_ids`, `purchase_date` and `event_date`, and also specify the `currency` of the report.\n\n<details>\n<summary><b>📄 <code>/feverzone/sales-summary</code> response entity model</b></summary>\n\n| Column Name            | Description                                                                                                                                                                                                                                                                                                                                                                         | Example value |\n|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|\n| `currency`             | ISO3 currency of the order monetary field.                                                                                                                                                                                                                                                                                                                                          | EUR           |\n| `orders`               | Metric representing the number of unique transactions (count) made, where each order may include multiple tickets and add-ons.                                                                                                                                                                                                                                                      | 100           |\n| `tickets_sold`         | Metric representing the number (sum) of entry tickets sold, excluding any complimentary tickets issued (invitations) and add-ons. This value shows the total number of entry tickets, representing the primary sales volume.                                                                                                                                                        | 200           |\n| `addons_sold`          | Metric representing the number (sum) of add-ons sold, excluding complimentary invitations. Indicates the total number of add-ons purchased.                                                                                                                                                                                                                                         | 50            |\n| `ticket_invitations`   | Metric representing the number (sum) of complimentary tickets issued at no charge for the user. Issuing invitations may have fees.                                                                                                                                                                                                                                                  | 10            |\n| `addons_invitations`   | Metric representing the number (sum) of complimentary add-ons issued at no charge. Issuing add-ons may have fees.                                                                                                                                                                                                                                                                   | 5             |\n| `ticket_gross_revenue` | Metric representing the revenue generated exclusively from the sale of entry tickets. It's the sum of `tickets_sold` multiplied by their ticket price. It shows the financial contribution of ticket sales to the total revenue.                                                                                                                                                    | 1200.00       |\n| `addon_gross_revenue`  | Metric representing the revenue generated from the sale of additional items or services, such as merchandise or premium experiences (a.k.a. add-ons). It's the sum of `addons_sold` multiplied by their add-on price. It indicates the contribution of supplementary products or services to total revenue.                                                                         | 356.34        |\n| `total_gross_revenue`  | Metric representing the total amount of revenue generated from ticket sales and add-ons, including surcharge, and before any discounts are applied. It equals to `ticket_gross_revenue` + `addon_gross_revenue` + `surcharge`. Indicates the overall financial performance, showing the total revenue collected from sales and additional charges before considering any discounts. | 1556.34       |\n| `ticket_surcharge`     | Metric representing the surcharges applied specifically to entry ticket sales. It's the sum of `tickets_sold` multiplied by their surcharge per ticket. It provides details on the extra fees associated with entry ticket purchases.                                                                                                                                               | 56.34         |\n| `addon_surcharge`      | Metric representing the surcharges applied specifically to add-ons. It's the sum of `addons_sold` multiplied by their surcharge per add-on. It shows the extra fees collected from add-on purchases.                                                                                                                                                                                | 0.00          |\n| `surcharge`            | Metric representing the sum of additional booking fees applied to the order at checkout. It's the sum of `ticket_surcharge` and `addon_surcharge`. It represents extra charges collected.                                                                                                                                                                                           | 56.34         |\n| `discount`             | Metric representing the total value of all discounts applied through promo codes or special offers. It's the sum of all discounts applied, and it's represented with a negative value. It indicates the amount of revenue that has been reduced due to promotional efforts.                                                                                                         | -100.00       |\n| `user_payment`         | Metric representing the total revenue collected after discounts. It is computed as the `total_gross_revenue` + `discounts`. It reflects actual revenue paid by customers.                                                                                                                                                                                                           | 1456.34       |\n\n</details>\n\n<details>\n<summary><b>📄 <code>/feverzone/sales-by-ticket-type</code> response entity model</b></summary>\n\n| Column Name            | Description                                                                                                                                                                                                                                                                                                                                                                         | Example value |\n|------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|\n| `currency`             | ISO3 currency of the order monetary field.                                                                                                                                                                                                                                                                                                                                          | EUR           |\n| `ticket_type`          | Type of ticket sold.                                                                                                                                                                                                                                                                                                                                                                | Adult         |\n| `tickets_sold`         | Metric representing the number (sum) of entry tickets sold, excluding any complimentary tickets issued (invitations) and add-ons. This value shows the total number of entry tickets, representing the primary sales volume.                                                                                                                                                        | 200           |\n| `addons_sold`          | Metric representing the number (sum) of add-ons sold, excluding complimentary invitations. Indicates the total number of add-ons purchased.                                                                                                                                                                                                                                         | 50            |\n| `ticket_invitations`   | Metric representing the number (sum) of complimentary tickets issued at no charge for the user. Issuing invitations may have fees.                                                                                                                                                                                                                                                  | 10            |\n| `addons_invitations`   | Metric representing the number (sum) of complimentary add-ons issued at no charge. Issuing add-ons may have fees.                                                                                                                                                                                                                                                                   | 5             |\n| `ticket_gross_revenue` | Metric representing the revenue generated exclusively from the sale of entry tickets. It's the sum of `tickets_sold` multiplied by their ticket price. It shows the financial contribution of ticket sales to the total revenue.                                                                                                                                                    | 1200.00       |\n| `addon_gross_revenue`  | Metric representing the revenue generated from the sale of additional items or services, such as merchandise or premium experiences (a.k.a. add-ons). It's the sum of `addons_sold` multiplied by their add-on price. It indicates the contribution of supplementary products or services to total revenue.                                                                         | 356.34        |\n| `total_gross_revenue`  | Metric representing the total amount of revenue generated from ticket sales and add-ons, including surcharge, and before any discounts are applied. It equals to `ticket_gross_revenue` + `addon_gross_revenue` + `surcharge`. Indicates the overall financial performance, showing the total revenue collected from sales and additional charges before considering any discounts. | 1556.34       |\n| `ticket_surcharge`     | Metric representing the surcharges applied specifically to entry ticket sales. It's the sum of `tickets_sold` multiplied by their surcharge per ticket. It provides details on the extra fees associated with entry ticket purchases.                                                                                                                                               | 56.34         |\n| `addon_surcharge`      | Metric representing the surcharges applied specifically to add-ons. It's the sum of `addons_sold` multiplied by their surcharge per add-on. It shows the extra fees collected from add-on purchases.                                                                                                                                                                                | 0.00          |\n| `surcharge`            | Metric representing the sum of additional booking fees applied to the order at checkout. It's the sum of `ticket_surcharge` and `addon_surcharge`. It represents extra charges collected.                                                                                                                                                                                           | 56.34         |\n| `discount`             | Metric representing the total value of all discounts applied through promo codes or special offers. It's the sum of all discounts applied, and it's represented with a negative value. It indicates the amount of revenue that has been reduced due to promotional efforts.                                                                                                         | -100.00       |\n| `user_payment`         | Metric representing the total revenue collected after discounts. It is computed as the `total_gross_revenue` + `discounts`. It reflects actual revenue paid by customers.                                                                                                                                                                                                           | 1456.34       |\n\n</details>\n\n<details>\n<summary><b>📄 <code>/feverzone/sales-by-reseller</code> response entity model</b></summary>\n\n| Column Name                    | Description                                                    | Example value                        |\n|--------------------------------|----------------------------------------------------------------|--------------------------------------|\n| `reseller.id`                  | ID of the reseller                                             | 607f50e3-666f-4b2e-9620-38aabf6d9m10 |\n| `reseller.name`                | Name of the reseller                                           | Reseller name                        |\n| `reseller.email`               | Email of the reseller                                          | test@reseller.com                    |\n| `reseller.type`                | Type of reseller                                               | AGENCY                               |\n| `reseller.contact_language`    | Language that the reseller uses for communications             | es_ES                                |\n| `reseller.accepts_comms`       | If reseller accepts communications or not                      | YES                                  |\n| `ticket_type`                  | Ticket type by reseller                                        | Agencia \\| Tarifa Básica             |\n| `venue_name`                   | Venue name by reseller                                         | Palacio Real de Madrid               |\n| `tickets_sold`                 | Tickets sold by reseller and aggregated dimensions applicable  | 1000                                 |\n| `gross_revenue`                | Gross revenue by reseller and aggregated dimensions applicable | 10000                                |\n\n</details>\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "6c0f20cf-9233-40d3-96c8-093044d97dcc",
+          "name": "Request FeverZone sales summary report",
+          "request": {
+            "name": "Request FeverZone sales summary report",
+            "description": {
+              "content": "Create a request to get a new FeverZone sales summary report within the given time range.The field plan_ids can be used to include only certain plans in the report.If empty, the sales summary report will refer to all plans.The search will be processed asynchronously, being able to fetch the result from the provided search ID",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "feverzone",
+                "sales-summary",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currency\": \"<string>\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "042fb3ba-2f5d-4ddc-b211-284b5c773df8",
+              "name": "Request was created successfully but is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"<string>\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e6ff47f8-3ca0-493c-914a-a8afff7ca6ed",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"<string>\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "90626c55-6bb4-4c4e-b862-2eb327722630",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"<string>\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "06b9bfc5-84bf-4957-aaf2-1a11fe62b3ee",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"<string>\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5f03a015-33f6-4193-ac5c-dcee6f3c9c78",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"<string>\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "60970c9a-6117-4baf-b1a9-87215cee635d",
+          "name": "Get FeverZone sales summary report",
+          "request": {
+            "name": "Get FeverZone sales summary report",
+            "description": {
+              "content": "Get an existing FeverZone sales summary report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and the report outputNotice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "feverzone",
+                "sales-summary",
+                "search",
+                ":search_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "page",
+                  "value": "0"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "search_id",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "ccaf129f-875c-47ec-9f31-ddbb9b2d051e",
+              "name": "Search was obtained successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"tickets_sold\": 4807,\n      \"addons_sold\": 7395,\n      \"ticket_invitations\": 1375,\n      \"addon_invitations\": 8526,\n      \"total_gross_revenue\": 145.6636930798394,\n      \"ticket_gross_revenue\": 7667.402670580466,\n      \"addon_gross_revenue\": 6971.834122936762,\n      \"surcharge\": 6436.988263067755,\n      \"ticket_surcharge\": 740.0407890861493,\n      \"addon_surcharge\": 7602.421531393426,\n      \"discount\": 1819.34600889482,\n      \"user_payment\": 7640.805772885587,\n      \"orders\": 2396,\n      \"currency\": \"USD\"\n    },\n    {\n      \"tickets_sold\": 2620,\n      \"addons_sold\": 5550,\n      \"ticket_invitations\": 2446,\n      \"addon_invitations\": 6057,\n      \"total_gross_revenue\": 2686.169977403142,\n      \"ticket_gross_revenue\": 8556.86963197692,\n      \"addon_gross_revenue\": 8204.333886388375,\n      \"surcharge\": 8549.578920032029,\n      \"ticket_surcharge\": 7379.091531368198,\n      \"addon_surcharge\": 1417.0144385574079,\n      \"discount\": 478.63275281198713,\n      \"user_payment\": 1431.3985833617583,\n      \"orders\": 4416,\n      \"currency\": \"USD\"\n    }\n  ],\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    },\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    }\n  ],\n  \"params\": {\n    \"currency\": \"USD\",\n    \"plan_ids\": [\n      \"<integer>\",\n      \"<integer>\"\n    ],\n    \"event_start_date_local_from\": \"<string>\",\n    \"event_start_date_local_to\": \"<string>\",\n    \"purchase_date_local_from\": \"<string>\",\n    \"purchase_date_local_to\": \"<string>\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0b4f6c65-b099-4422-905b-ff542d89ab09",
+              "name": "Request is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "71bdcee6-0769-485d-8877-8cde225bda98",
+              "name": "Bad Request",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search ID 1234 is not valid\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "f9904748-bf3d-43d8-bd17-1c5a76b87a71",
+              "name": "Forbidden",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"User test@example.com is not allowed to access the following fields: 'forbidden_field_1', 'forbidden_field_2'\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4b0629be-e9a9-41a9-8256-1c8fdd524f41",
+              "name": "Not Found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "63de5472-b649-44ab-937d-2a39e27549ba",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cbb4e482-0ca7-499b-8406-965c3202e3d9",
+              "name": "Search expired",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Gone",
+              "code": 410,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search expired. Please create a new one\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "722f4eaa-c397-4000-a3ab-7b8df213f909",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "b3321580-f6e7-45d5-94eb-276375bd0796",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "487b8c47-1cee-4bd6-8abb-77a21fbad485",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-summary",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "84345ec0-c135-441c-a5f3-c40fe1d93fa2",
+          "name": "Request FeverZone sales by ticket type report",
+          "request": {
+            "name": "Request FeverZone sales by ticket type report",
+            "description": {
+              "content": "Create a request to get a new FeverZone sales by ticket type report within the given time range.The field plan_ids can be used to include only certain plans in the report.If empty, the sales by ticket type report will refer to all plans.The search will be processed asynchronously, being able to fetch the result from the provided search ID",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "feverzone",
+                "sales-by-ticket-type",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currency\": \"<string>\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "e6ac04dc-8181-4da6-b482-a712de26ebe3",
+              "name": "Request was created successfully but is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"USD\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "84b2be42-f502-4858-a7e1-3707b57944d1",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"USD\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1f6a80c9-7dda-41ed-aeca-eded69d2644e",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"USD\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "52661b06-f395-4a6a-92af-4dd50e61678e",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"USD\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0df391df-d4b1-46ec-94b4-9139b799541f",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"currency\": \"USD\",\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"event_start_date_local_from\": \"<string>\",\n  \"event_start_date_local_to\": \"<string>\",\n  \"purchase_date_local_from\": \"<string>\",\n  \"purchase_date_local_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "f04c713f-3825-471e-bdb5-39c74605127b",
+          "name": "Get FeverZone sales by ticket type report",
+          "request": {
+            "name": "Get FeverZone sales by ticket type report",
+            "description": {
+              "content": "Get an existing FeverZone sales by ticket type report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and the report outputNotice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "feverzone",
+                "sales-by-ticket-type",
+                "search",
+                ":search_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "page",
+                  "value": "0"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "search_id",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "41fa4661-139d-47af-819a-d52e485b8e1c",
+              "name": "Search was obtained successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"tickets_sold\": 7088,\n      \"addons_sold\": 9443,\n      \"ticket_invitations\": 470,\n      \"addon_invitations\": 8117,\n      \"total_gross_revenue\": 609.6974339315186,\n      \"ticket_gross_revenue\": 4868.965611495676,\n      \"addon_gross_revenue\": 6564.9119235578555,\n      \"surcharge\": 7881.152309176806,\n      \"ticket_surcharge\": 2556.5444971512043,\n      \"addon_surcharge\": 1969.0343906577634,\n      \"discount\": 9736.219771542104,\n      \"user_payment\": 4213.058758226479,\n      \"currency\": \"USD\",\n      \"ticket_type\": \"General Admission\"\n    },\n    {\n      \"tickets_sold\": 7487,\n      \"addons_sold\": 3761,\n      \"ticket_invitations\": 5032,\n      \"addon_invitations\": 2368,\n      \"total_gross_revenue\": 7765.829735000538,\n      \"ticket_gross_revenue\": 793.4900842454973,\n      \"addon_gross_revenue\": 8245.480557091223,\n      \"surcharge\": 1060.8837425657448,\n      \"ticket_surcharge\": 8347.030931781852,\n      \"addon_surcharge\": 7970.63676383385,\n      \"discount\": 1559.451315410485,\n      \"user_payment\": 5967.629524180871,\n      \"currency\": \"USD\",\n      \"ticket_type\": \"General Admission\"\n    }\n  ],\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    },\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    }\n  ],\n  \"params\": {\n    \"currency\": \"USD\",\n    \"plan_ids\": [\n      \"<integer>\",\n      \"<integer>\"\n    ],\n    \"event_start_date_local_from\": \"<string>\",\n    \"event_start_date_local_to\": \"<string>\",\n    \"purchase_date_local_from\": \"<string>\",\n    \"purchase_date_local_to\": \"<string>\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9471d7ae-af04-4081-b698-b9344cf2c7de",
+              "name": "Request is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c3336445-3368-4f11-ae94-457504a1d21b",
+              "name": "Bad Request",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search ID 1234 is not valid\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "dad88792-e2ea-4de4-9367-9f49d3c1c063",
+              "name": "Forbidden",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"User test@example.com is not allowed to access the following fields: 'forbidden_field_1', 'forbidden_field_2'\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "0c5e4ebb-9d49-4d42-be26-67c284583137",
+              "name": "Not Found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e58e1c96-3099-4484-abc9-93f7b1fc0099",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "cd189f3e-ccb1-472f-a8dd-2c5efabc4253",
+              "name": "Search expired",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Gone",
+              "code": 410,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search expired. Please create a new one\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4303c75a-c0a2-445d-8413-282431ecd6a5",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "94171c01-ab0d-4e8a-8051-24513ab8f504",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2655409e-c1d9-4b19-bd90-5dd4d76fbe23",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-ticket-type",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "d7897777-4bd0-4998-ac05-82f2779f5383",
+          "name": "Request resellers",
+          "request": {
+            "name": "Request resellers",
+            "description": {
+              "content": "Create a request to get resellers. The field reseller_ids can be used to filter the resellers by id.If empty, all resellers will be returned.The search will be processed asynchronously, being able to fetch the result from the provided search ID.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "feverzone",
+                "sales-by-reseller",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reseller_ids\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "e6f3e769-92c6-47f0-8f83-9c18503990ff",
+              "name": "Request was created successfully but is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reseller_ids\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "2d00a835-8c56-44a6-9f81-86be4685c741",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reseller_ids\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "4ce6313e-65ed-44ab-a67a-7335e9af1e52",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reseller_ids\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "1bfa5898-fe51-47cb-aa05-f87d6c1456d9",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reseller_ids\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "991b2cab-18f4-4c37-8faf-66b03ca52b04",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"reseller_ids\": [\n    \"<string>\",\n    \"<string>\"\n  ]\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "ebb4e09c-2cc0-4140-a420-023249e11020",
+          "name": "Get sales by reseller",
+          "request": {
+            "name": "Get sales by reseller",
+            "description": {
+              "content": "Get resellers' sales aggregated from a search_id.",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "feverzone",
+                "sales-by-reseller",
+                "search",
+                ":search_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "page",
+                  "value": "0"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "search_id",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "7c59d76e-b082-47a4-8dcd-5ae2e60141ba",
+              "name": "Search was obtained successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"tickets_sold\": 1000,\n      \"gross_revenue\": 10000,\n      \"reseller\": {\n        \"id\": \"607f50e3-666f-4b2e-9620-38aabf6d9m10\",\n        \"name\": \"Reseller name\",\n        \"email\": \"test@reseller.com\",\n        \"type\": \"AGENCY\",\n        \"contact_language\": \"es_ES\",\n        \"accepts_comms\": \"YES\"\n      },\n      \"ticket_type\": \"string\",\n      \"venue_name\": \"string\"\n    },\n    {\n      \"tickets_sold\": 1000,\n      \"gross_revenue\": 10000,\n      \"reseller\": {\n        \"id\": \"607f50e3-666f-4b2e-9620-38aabf6d9m10\",\n        \"name\": \"Reseller name\",\n        \"email\": \"test@reseller.com\",\n        \"type\": \"AGENCY\",\n        \"contact_language\": \"es_ES\",\n        \"accepts_comms\": \"YES\"\n      },\n      \"ticket_type\": \"string\",\n      \"venue_name\": \"string\"\n    }\n  ],\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    },\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    }\n  ],\n  \"params\": {\n    \"reseller_ids\": [\n      \"<string>\",\n      \"<string>\"\n    ]\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "5c96e884-2e60-4c37-b241-dcae38a33802",
+              "name": "Request is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e6157140-9080-439b-96b2-acf905d98f55",
+              "name": "Bad Request",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search ID 1234 is not valid\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "efef57c4-6a4d-445a-bb03-8e4c584b3071",
+              "name": "Not Found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "26c5414f-f49e-4a47-b439-4386de2998a1",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "6075180e-5f5e-436f-8b1d-085007b88b2d",
+              "name": "Search expired",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Gone",
+              "code": 410,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search expired. Please create a new one\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "c4cc0a1b-9347-401d-9506-8e12b6d48b1c",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "058cf1c6-9e8c-4278-96d5-630afb2fda0b",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "e785ae9d-271a-48d5-948f-09d121803a23",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "feverzone",
+                    "sales-by-reseller",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "027228e2-9373-43a0-9256-7603f8a22c9a",
+    "name": "Fever - Reporting Authentication FeverZone API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Access detailed event sales data through a reliable REST API.\n\n# Introduction\n\nThe Fever Reporting API is a RESTful service that gives our partners access to in-depth insights into their event sales\non Fever. With this API, partners can retrieve comprehensive order data, including ticket information, financial details\n(revenue, surcharges, discounts), plan details, and basic customer data.\n\n## Primary Use Cases\n\nThis API is intended for partners who want to integrate Fever sales data into their internal systems—such as CRMs,\nBusiness Intelligence (BI) platforms, data warehouses, or ERP systems.\n\n## What It’s Not For\n\n**This API is not designed for real-time operational use cases like access control or live inventory tracking.**\nFor those needs, please refer to other Fever APIs specifically built for operational workflows.\n\n## Getting Access\n\nAccess to the Fever Reporting API is granted individually. To request access, reach out to your Fever sales\nrepresentative. They’ll walk you through the process. Once approved, you'll receive credentials to authenticate and\nbegin using the API.\n\n## Extended Documentation (for Authorized Partners)\n\nOnce your access is approved and credentials are issued, you’ll be able to view the full technical documentation here:\n[🔒 Extended Documentation](https://data-reporting-api.prod.feverup.com/v1/documentation).\nIf you haven’t received your credentials yet, you can still access the public section of our documentation, which covers\nmost of the key technical information.\n\n## Playground (for Authorized Partners)\n\nAfter receiving your API credentials, you can access the [▶️ Fever - Reporting API Playground](https://data-reporting-api.prod.feverup.com/v1/playground) to explore\nand test available endpoints.  The Playground is a Swagger UI interface that allows you to:\n- Browse detailed documentation for each endpoint\n- Execute live API requests directly from your browser\n- Authentication is required, so be sure to log in with your credentials before using the interface.\n\n## Status Page\n\nWe are committed to providing a reliable service for our users. To ensure transparency, you can subscribe to\nour [📣 Status Page](https://status.data-reporting-api.prod.feverup.com/) to stay informed about:\n\n- Scheduled maintenance that may temporarily affect the availability of the Reporting API\n- Ongoing incidents and issues impacting the performance or functionality of the API\n- Resolutions and updates on incidents in real-time\n\nBy subscribing, you will receive timely notifications via email, Slack, etc., keeping you updated on any events that\nmight impact your integration with the Reporting API.\n\n<br><br>\n# Quickstart\n\n### Code samples\n\n<details>\n<summary>🐍 Python code sample to extract data from <code>/example-endpoint</code> endpoint</summary>\n\n```python\nimport json\nimport time\nfrom typing import Any\n\nimport requests\n\n\nclass RAPIConnector:\n    def __init__(self, hostname: str, username: str, password: str) -> None:\n        self.hostname = hostname\n        self.__username = username\n        self.__password = password\n        self.__access_token = self.__get_access_token()\n\n    def __get_access_token(self) -> str:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/auth/token\", data={\"username\": self.__username, \"password\": self.__password}\n        )\n        response.raise_for_status()\n        return response.json()[\"access_token\"]\n\n    def __get_request_headers(self) -> dict[str, str]:\n        return {\"Authorization\": f\"Bearer {self.__access_token}\"}\n\n    def post_example_endpoint(self, search_params: dict[str, Any]) -> requests.Response:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/example-endpoint/search\",\n            headers=self.__get_request_headers(),\n            json=search_params,\n        )\n        response.raise_for_status()\n        return response\n\n    def get_example_endpoint(\n            self, search_id: str, page: int = 0) -> requests.Response:\n        return requests.get(\n            f\"https://{self.hostname}/v1/example-endpoint/search/{search_id}\",\n            headers=self.__get_request_headers(),\n            params={\"page\": page},\n        )\n\n    def fetch_all_order_items(self, search_params: dict[str, Any]) -> dict[str, Any]:\n        search = self.post_example_endpoint(search_params=search_params)\n        search_id = search.json()[\"search_id\"]\n        is_ready = False\n        n_attempts = 0\n        while not is_ready and n_attempts < 10:\n            search = self.get_example_endpoint(search_id=search_id)\n            is_ready = True if search.status_code == 200 else False\n            if not is_ready:\n                print(f\"{search.status_code} - Waiting search result to be ready...\")\n            n_attempts += 1\n            time.sleep(1)\n            if n_attempts == 10:\n                raise Exception(\"Search result is not ready after 10 attempts\")\n\n        # Fetch all pages\n        data = search.json()[\"data\"]\n        partition_info = search.json()[\"partition_info\"]\n        total_rows = 0\n        print(f\"Found a total of {len(partition_info)} partitions\")\n        for partition in partition_info:\n            page = partition[\"partition_num\"]\n            total_rows += int(partition[\"rows\"])\n            if page == 0:\n                continue\n            print(f\"Fetching partition {page}...\")\n            search = self.get_example_endpoint(search_id=search_id, page=page)\n            data += search.json()[\"data\"]\n        assert len(data) == total_rows\n        return data\n\n\ndef main() -> None:\n    hostname = \"data-reporting-api.prod.feverup.com\"\n    username = \"<YOUR_USERNAME>\"\n    password = \"<YOUR_PASSWORD>\"\n    rapi_connector = RAPIConnector(hostname=hostname, username=username, password=password)\n    search_params = {\n        \"date_field\": \"CREATED_DATE_UTC\",\n        \"date_from\": \"2024-01-01\",\n        \"date_to\": \"2024-02-01\",\n    }\n    raw_path = \"example_endpoint_raw.json\"\n\n    print(\"### Extracting data from Reporting API ###\")\n    data = rapi_connector.fetch_all_order_items(search_params=search_params)\n\n    # Save the raw data to a JSON file\n    with open(raw_path, \"w\") as f:\n        f.write(json.dumps(data, indent=4))\n        print(f\"Data extracted and saved to {raw_path}\")\n\n\nif __name__ == \"__main__\":\n    main()\n```\n\n</details>\n\n## Authentication\n\nThe first step is to authenticate with the API. The API uses the OAuth 2.0 protocol to authenticate users.\nIn order to fetch a valid token, you must use the following endpoint:\n\n- `POST /oauth/token` -> It will return a valid `token` to be used in the following requests from your `username`\n  and `password` credentials.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/auth/token'\n  -H 'Accept: application/json'\n  -H 'Content-Type: application/x-www-form-urlencoded'\n  -d 'username=<YOUR_USERNAME>&password=<YOUR_PASSWORD>'\n```\n\nRemember to replace `<YOUR_USERNAME>` and `<YOUR_PASSWORD>` with the correct values.\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"access_token\": \"<YOUR_ACCESS_TOKEN>\",\n  \"token_type\": \"bearer\"\n}\n```\n\n</details>\n\n## How to request data for any endpoint in the Reporting API?\n\nThe approach is analogous for all the endpoints in the API. The API works with asynchronous requests that return\npaginated results. This means that for every request, you will need to follow these steps:\n\n1. Create a request asynchronously, in order to obtain a **search ID**. When creating this request, certain parameters\n   might be requested in order to filter the expected data, like entity IDs, dates, etc.\n2. Fetch the paginated results for the requested data. This step will require the **search ID** obtained in the previous\n   step, and it will return the paginated data for the requested report.\n\n<details>\n<summary>➡️ Example requesting data for <code>/reports/order-items</code> endpoint</summary>\n\n### 1. Create the request asynchronously to get order items data\n\nThe first step is to create a new search asynchronously in order to fetch the order items. You can do this by sending\na `POST` request to the endpoint.\n\n- `POST /xxx/search`: It will create a new search. The request body must contain the search criteria, allowing to search\n  by creation or update date among other parameters, depending on the endpoint itself. The response will contain the *\n  *search ID** that you can later use to fetch the paginated result.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n  ```shell\n  curl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search'\n    -H 'accept: application/json'\n    -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n    -H 'Content-Type: application/json'\n    -d '{ \"param_a\": \"<value>\" }'\n  ```\n\nRemember to replace `<YOUR_ACCESS_TOKEN>` with the correct value. You can check all the accepted parameters in the\nendpoints documentation (available in private docs).\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"<YOUR_SEARCH_ID>\"\n}\n```\n\nThe response will contain the **search ID** that you can use to fetch the paginated result afterwards.\n\n</details>\n\n### 2. Fetch the paginated results for the requested data\n\nThe last step is to fetch the search result data. You can do this by sending a `GET` request to\nthe `/xxx/{search_id}` endpoint.\n\n- `GET /xxx/<YOUR_SEARCH_ID>?page=<YOUR_PAGE_ID>`: It will return the search data for\n  the given ID and page number. By default, the page number is `0`, and only mandatory columns are returned.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'GET' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search/<YOUR_SEARCH_ID?page=<YOUR_PAGE_ID>\n  -H 'accept: application/json'\n  -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n```\n\nFor instance, this request will retrieve all mandatory fields plus `aaa` and `bbb` fields. Remember to\nreplace `<YOUR_SEARCH_ID>`, and `<YOUR_PAGE_ID>` with the correct values.\n\nOnce the output is ready to be consumed, it will return a JSON object containing the orders data for the given search ID\nand page number. Otherwise, it will return a `202` status code with a message indicating that the data is still being\nprocessed.\n\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=0\",\n      \"size\": 1234,\n      \"rows\": 100\n    },\n    {\n      \"partition_num\": 1,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=1\",\n      \"size\": 5678,\n      \"rows\": 100\n    }\n  ],\n  \"data\": [\n    \"your data records\"\n  ]\n}\n```\n\n</details>\n\n</details>\n\n<br><br>\n# Rate limits\n\nThe Fever Reporting API has rate limits on its endpoints.\n\n- **Authentication**: 20 requests/minute.\n- **Other endpoints**: 200 requests/minute.\n\nIf you exceed these limits, you will receive a `429 Too Many Requests` response. In this case, you should wait for one minute before making additional requests.\n\n<br><br>\n# FAQ\n\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How are <b><i>cancellations</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, cancellations are handled at the individual order item level. Each order item represents a single unit (ticket, add-on, etc.) within an order.\n>\n> When an order item is canceled, its `status` field will change to `CANCELED`.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">💡 <b>Example</b></summary>\n>\n> #### Before cancellation\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After cancellation of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"CANCELED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How are <b><i>transfers</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, transfers are handled at the individual order item level. Each order item represents a single unit, so when an order item is transferred, the owner information is updated to reflect the new owner.\n>\n> When an order item is transferred, the `owner` field will be updated with the new owner's information. The order item maintains its `PURCHASED` status but now belongs to the new owner.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">💡 <b>Example</b></summary>\n>\n> #### Before transfer\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   // ... order fields\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\",\n>         \"email\": \"alice@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After transfer of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Charlie\",\n>         \"email\": \"charlie@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How is the param <code>UPDATED_DATE_UTC</code> updated in the `/reports/order-items` endpoint?</summary>\n> <br>\n> Please note that not all fields in the returned JSON are eligible to update the value of <code>UPDATED_DATE_UTC</code>. Only fields directly related to the purchase and order items themselves will trigger a change in this value.\n> </details>\n\n\nContact Support:\n Name: Support\n Email: data-support@feverup.com",
+      "type": "text/plain"
+    }
+  }
+}

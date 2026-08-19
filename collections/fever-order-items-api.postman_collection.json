@@ -1,0 +1,1207 @@
+{
+  "item": [
+    {
+      "id": "db47dcbb-78e7-4463-8532-c62d109956ce",
+      "name": "Order Items",
+      "description": {
+        "content": "These endpoints enable to access order-item data.\n\n## Filtering Options\n\nThe endpoint supports filtering by:\n\n| Parameter | Type | Description |\n|-----------|------|-------------|\n| `order_ids` | array[integer] | List of specific order IDs |\n| `plan_ids` | array[integer] | List of specific plan (event) IDs |\n| `date_field` | string | Date field to filter on (`CREATED_DATE_UTC`, `UPDATED_DATE_UTC`, or `EVENT_START_DATE_UTC`). `UPDATED_DATE_UTC` filters on when the order **data** last changed (any field of the flattened record, including nested/enrichment fields such as plan name), matching the `updated_date_utc` field in the response — not the order's own update time (`order_updated_date_utc`). |\n| `date_from` | string | Start date for the selected date field. Format: `YYYY-MM-DD HH:mm` or `YYYY-MM-DD` |\n| `date_to` | string | End date for the selected date field. Format: `YYYY-MM-DD HH:mm` or `YYYY-MM-DD` |\n\n## Model documentation\n\n#### Orders with Order Items\n\nThe goal of this endpoint is to provide a comprehensive picture about orders with detailed information about their\nassociated order items, including buyers, owners, partners, plans, sessions, and more.\n\n<details>\n<summary><b>📄 <code>/reports/order-items</code> response entity model</b></summary>\n\n| Column Name                | Description                                                                   | Example value                                              |\n|----------------------------|-------------------------------------------------------------------------------|-------------------------------------------------------------|\n| `id`                       | Unique order ID. This code groups all tickets bought in the same transaction. | 12345                                                      |\n| `parent_order_id`          | If the order comes from a reschedule, the original order ID                   | 11234                                                      |\n| `buyer`                    | Order buyer information.                                                      | _See `order.buyer` documentation below_                    |\n| `created_date_utc`         | UTC date when the order was created.                                          | 2021-01-01T00:00:00Z                                       |\n| `updated_date_utc`         | UTC date when the order **data** was last updated — moves whenever any field of the flattened order record changes (including nested/enrichment fields such as plan name, UTM or ratings). This is the field the `UPDATED_DATE_UTC` filter matches, so filtering by `UPDATED_DATE_UTC` and this value are always consistent. | 2021-01-01T00:00:00Z |\n| `order_updated_date_utc`   | UTC date when the order **itself** was last updated (order-level fields only). Unlike `updated_date_utc`, it does not move when only nested/enrichment data changes. | 2021-01-01T00:00:00Z |\n| `surcharge`                | Surcharge applied to the order.                                               | 0.0                                                        |\n| `currency`                 | ISO3 currency of the order monetary fields.                                   | USD                                                        |\n| `purchase_channel`         | Purchase channel where the transaction comes from.                            | web                                                        |\n| `channel`                  | Channel slug through which this order was placed. Use this field to join with `POST /v1/reports/channels/search` — the `channel` field in both endpoints is the same slug. `null` when no channel is recorded on the order (e.g. box-office or pre-channel data). | partner-channel |\n| `payment_method`           | Payment method used.                                                          | credit_card                                                |\n| `purchase_location_source` | Purchase location information.                                                | _See `order.purchase_location_source` documentation below_ |\n| `billing_zip_code`         | Billing ZIP Code manually fulfilled by the customer.                          | 28001                                                      |\n| `utm`                      | UTM information attributed to the order.                                      | _See `order.utm` documentation below_                      |\n| `partner`                  | Partner information.                                                          | _See `order.partner` documentation below_                  |\n| `business`                 | Business associated with the order.                                           | _See `order.business` documentation below_                 |\n| `plan`                     | Plan information.                                                             | _See `order.plan` documentation below_                     |\n| `coupon`                   | Coupon information.                                                           | _See `order.coupon` documentation below_                   |\n| `assigned_seats`           | List of assigned seats for the order.                                         | _See `order.assigned_seats` documentation below_           |\n| `order_items`              | List of order items associated with this order.                               | _See `order.order_items` documentation below_              |\n| `booking_questions`        | List of booking questions and answers for the order.                          | _See `order.booking_questions` documentation below_        |\n| `order_group_id`           | 🚧 **Under Development.** Groups orders from cluster tickets. All orders with the same `order_group_id` belong to the same purchase group (e.g., bundled tickets across multiple venues). | 12345                                                      |\n| `is_main_group_order`      | 🚧 **Under Development.** Flag indicating whether this is the main order in a group. `true` for the primary order, `false` for secondary orders in the same group.                       | true                                                       |\n| `staff_notes`              | List of staff notes attached to the order. Opt-in: only returned when the search request includes `included_fields=staff_notes`; otherwise the field is omitted from the response. | `[\"Payment Details: Groupon\", \"change ticket to new day\"]` |\n| `booked_slots`             | List of booked slots (assets/rooms reserved by the cart).                     | _See `order.booked_slots` documentation below_             |\n| `payment_details`          | Card payment details for the order (transaction id, brand and descriptive payment method). Empty/null when the order was not paid by card or no card details are recorded. | _See `order.payment_details` documentation below_ |\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.buyer</code></span></summary>\n\n| Column Name            | Description                                                                                                     | Example value                                          |\n|------------------------|-----------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|\n| `id`                   | Unique ID of the buyer.                                                                                         | 123456                                                 |\n| `first_name`           | First name of the order buyer.                                                                                  | John                                                   |\n| `last_name`            | Last name of the order buyer.                                                                                   | Doe                                                    |\n| `email`                | Email of the order buyer.                                                                                       | test@example.com                                       |\n| `date_of_birthday`     | Date of birth of the order buyer.                                                                               | 1990-01-01                                             |\n| `marketing_preference` | Indicates whether the user accepted receiving marketing communications from the partner in the checkout screen. | true                                                   |\n| `language`             | Language of the order buyer, extracted from the device locale. The format is ISO 639-1 (two letters).           | en                                                     |\n| `b2b_end_user`         | B2B end-user information. `null` when the buyer is not B2B or no B2B end user is linked to the order.           | _See `order.buyer.b2b_end_user` documentation below_   |\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order.buyer.b2b_end_user</code></span></summary>\n\n| Column Name  | Description                       | Example value     |\n|--------------|-----------------------------------|-------------------|\n| `id`         | Unique ID of the B2B end user.    | 789012            |\n| `email`      | Email of the B2B end user.        | test@feverup.com  |\n| `first_name` | First name of the B2B end user.   | John              |\n| `last_name`  | Last name of the B2B end user.    | Doe               |\n\n</details>\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.purchase_location_source</code></span></summary>\n\n| Column Name    | Description                                                                                                                                               | Example value |\n|----------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|\n| `id_geo_name`  | Geo name ID from where the purchase was made. This field is inferred so it might not be accurate. More information at https://www.geonames.org/about.html | 123456        |\n| `city_name`    | City from where the purchase was made. This field is inferred so it might not be accurate.                                                                | Madrid        |\n| `country_code` | Country code from where the purchase was made. This field is inferred so it might not be accurate.                                                        | ES            |\n| `region_code`  | Region code from where the purchase was made. This field is inferred so it might not be accurate.                                                         | MD            |\n| `postal_code`  | Best estimate of user location at time of purchase, combining multiple sources of information.                                                            | 28001         |\n| `quality`      | Quality order.                                                                                                                                            | 1.0           |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.utm</code></span></summary>\n\n| Column Name            | Description                                                                     | Example value |\n|------------------------|---------------------------------------------------------------------------------|---------------|\n| `utm.source`           | Value of the UTM source field where the order comes from based on last click.   | google        |\n| `utm.medium`           | Value of the UTM medium field where the order comes from based on last click.   | cpc           |\n| `utm.campaign`         | Value of the UTM campaign field where the order comes from based on last click. | campaign_1234 |\n| `utm.content`          | Value of the UTM content field where the order comes from based on last click.  | 692693771262  |\n| `utm.term`             | Value of the UTM term field where the order comes from based on last click.     | candlelight   |\n| `utm.referring_domain` | Value of the referring domain where the order comes from.                       | google.com    |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.partner</code></span></summary>\n\n| Column Name | Description               | Example value |\n|-------------|---------------------------|---------------|\n| `id`        | Unique ID of the partner. | 1             |\n| `name`      | Name of the partner.      | Partner Name  |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.business</code></span></summary>\n\n| Column Name | Description                                 | Example value                        |\n|-------------|---------------------------------------------|--------------------------------------|\n| `id`        | Unique ID of the business.                  | 7c1caabf-85cd-42ac-96db-524b15443a7b |\n| `name`      | Name of the business.                       | Sample City Tours                    |\n| `tax_id`    | Tax identification number of the business.  | B12345678                            |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.plan</code></span></summary>\n\n| Column Name  | Description                                                                                                                                          | Example value                                       |\n|--------------|------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------|\n| `id`         | Unique ID of the plan.                                                                                                                               | 11                                                  |\n| `name`       | Name of the plan, providing a short description of the event the client will attend.                                                                 | Plan Name                                           |\n| `gallery`    | List of gallery resources (images / videos) attached to the plan. Opt-in: only returned when the search request includes `included_fields=gallery`; otherwise the field is omitted from the response. | _See `order.plan.gallery` documentation below_      |\n| `taxonomies` | List of taxonomies attached to the plan. Opt-in: only returned when the search request includes `included_fields=taxonomies`; otherwise the field is omitted from the response.      | _See `order.plan.taxonomies` documentation below_   |\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order.plan.gallery</code></span></summary>\n\n| Column Name | Description                                              | Example value                       |\n|-------------|----------------------------------------------------------|-------------------------------------|\n| `url`       | URL of the gallery resource.                             | https://www.example.com/image.jpg   |\n| `type`      | Type of the gallery resource. One of `image` or `video`. | image                               |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order.plan.taxonomies</code></span></summary>\n\n| Column Name | Description        | Example value   |\n|-------------|--------------------|-----------------|\n| `id`        | Unique taxonomy ID.| 1234            |\n| `name`      | Taxonomy name.     | Taxonomy name   |\n\n</details>\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.coupon</code></span></summary>\n\n| Column Name | Description                                                | Example value |\n|-------------|------------------------------------------------------------|---------------|\n| `name`      | Name of the coupon.                                        | Coupon Name   |\n| `code`      | Code of the coupon.                                        | COUPON_CODE   |\n| `discount`  | Discount amount applied by the coupon.                     | 0.0           |\n| `kind`      | Coupon kind label (e.g. `No Coupons`, partner-defined).    | No Coupons    |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.assigned_seats</code></span></summary>\n\n| Column Name                       | Description                   | Example value |\n|-----------------------------------|-------------------------------|---------------|\n| `id`                              | Seat id.                      | seat_123      |\n| `name`                            | Seat name.                    | A1            |\n| `seating_provider`                | Seating provider.             | provider_name |\n| `seating_provider_seat_reference` | Seating provider's seat name. | ref_123       |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.booking_questions</code></span></summary>\n\n| Column Name | Description                                    | Example value                               |\n|-------------|------------------------------------------------|---------------------------------------------|\n| `id`        | Booking question ID.                           | f4dd7822-8461-44d6-af47-acdbfd47bf80        |\n| `question`  | The booking question text.                     | How did you find out about this experience? |\n| `answers`   | List of answers provided by the user.          | [\"Instagram\", \"Facebook\"]                   |\n| `index`     | The index of the question in the booking flow. | 1                                           |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.booked_slots</code></span></summary>\n\nCart-level array of booked slots. The same array is denormalized across every order in the same cart.\n\n| Column Name       | Description                                                                                                          | Example value                                          |\n|-------------------|----------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------|\n| `id`              | Unique ID of the booked slot. Matches `order_item.booked_slot_id` for every order item assigned to this slot.        | 9876543                                                |\n| `timeslot_utc`    | UTC start of the timeslot the slot is booked for.                                                                    | 2026-05-08T09:30:00Z                                   |\n| `slot_count`      | Capacity counter from the cart engine. Useful for debugging only — see `party_size` for the actual people booked.    | 12                                                     |\n| `occupancy_count` | Number of independent parties booked at the asset for this cart.                                                     | 1                                                      |\n| `party_size`      | Total people (count of order items) sold for this booked slot.                                                       | 4                                                      |\n| `is_removed`      | Whether the slot was removed by the cart engine.                                                                     | false                                                  |\n| `activity`        | Activity that owns the booked asset.                                                                                 | _See `order.booked_slots.activity` documentation below_ |\n| `asset`           | Asset (e.g. room) the slot is booked on.                                                                             | _See `order.booked_slots.asset` documentation below_   |\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order.booked_slots.activity</code></span></summary>\n\n| Column Name | Description    | Example value           |\n|-------------|----------------|-------------------------|\n| `id`        | Activity ID.   | 481                     |\n| `name`      | Activity name. | Escape Room Northbridge |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order.booked_slots.asset</code></span></summary>\n\n| Column Name                                  | Description                                                                  | Example value  |\n|----------------------------------------------|------------------------------------------------------------------------------|----------------|\n| `id`                                         | Asset ID (e.g. an Escape This room).                                         | 3473           |\n| `name`                                       | Asset name.                                                                  | NB - Asylum    |\n| `description`                                | Asset description.                                                           |                |\n| `availability_strategy`                      | Capacity strategy used by the asset (`BY_PARTY_COUNT` or `BY_PEOPLE_COUNT`). | BY_PARTY_COUNT |\n| `max_party_size`                             | Maximum number of people allowed in a single party.                          | 4              |\n| `min_party_size`                             | Minimum number of people required to book a party.                           | 1              |\n| `max_num_parties`                            | Maximum number of independent parties the asset can host.                    | 1              |\n| `partner_id`                                 | Partner that owns the asset.                                                 | 190            |\n| `asset_type_id`                              | Asset type ID.                                                               | 7              |\n| `is_manual_assignment_confirmation_required` | Whether the asset requires manual assignment confirmation.                   | false          |\n\n</details>\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.payment_details</code></span></summary>\n\nOrder-level array of card payment details. Empty/null when the order was not paid by card. The same array is denormalized across every order item belonging to the same order.\n\n| Column Name      | Description                                                               | Example value |\n|------------------|---------------------------------------------------------------------------|---------------|\n| `id`             | Transaction ID issued by the payment processor (Braintree, Stripe, ...).  | tx_abc123     |\n| `card_brand`     | Card brand (`visa`, `mastercard`, `amex`, `discover`, ...).               | visa          |\n| `payment_method` | Descriptive payment method joined from the order's payment configuration. | Card          |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:18pt;\"><code>order.order_items</code></span></summary>\n\n| Column Name                       | Description                                                                                                                                                                                                                                                                                                                                                                                          | Example value                                     |\n|-----------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------|\n| `id`                              | Unique ID of the order item.                                                                                                                                                                                                                                                                                                                                                                         | 123456                                            |\n| `ticket_id`                       | Operational identifier of the ticket grouping order items from the same session. Provided for compatibility with transactional use cases (e.g., reschedules and transfers); it is not intended as a core reporting metric.                                                                                                                                                                           | 334455                                            |\n| `booked_slot_id`                  | ID of the booked slot the order item was assigned to within its cart, when the activity behind the session uniquely resolves to a single booked slot (e.g. Escape This rooms). Matches `order.booked_slots[].id`. NULL when the activity exposes more than one asset and the cart engine spread parties across them; consumers can fall back to substring matching against `booked_slots[].asset.name`. | 9876543                                           |\n| `cancellation_date_utc`           | Last UTC date when any part of the ticket was cancelled.                                                                                                                                                                                                                                                                                                                                             | 2021-01-01T00:00:00Z                              |\n| `cancellation_type`               | Type of cancellation. REFUND: means that the ticket has been cancelled due to a refund. RESCHEDULE: means that the ticket has been cancelled due to a reschedule.                                                                                                                                                                                                                                    | REFUND                                            |\n| `created_date_utc`                | UTC date of the ticket creation.                                                                                                                                                                                                                                                                                                                                                                     | 2021-01-01T00:00:00Z                              |\n| `discount`                        | Discount applied to the ticket.                                                                                                                                                                                                                                                                                                                                                                      | 10.0                                              |\n| `is_invite`                       | Indicates whether the ticket is an invitation from the partner.                                                                                                                                                                                                                                                                                                                                      | false                                             |\n| `modified_date_utc`               | UTC date of the last modification of the ticket.                                                                                                                                                                                                                                                                                                                                                     | 2021-01-01T00:00:00Z                              |\n| `purchase_date_utc`               | UTC date of the ticket purchase.                                                                                                                                                                                                                                                                                                                                                                     | 2021-01-01T00:00:00Z                              |\n| `event_start_date_utc`            | UTC start date of the event associated with this order item.                                                                                                                                                                                                                                                                                                                                         | 2021-01-01T00:00:00Z                              |\n| `validated_date_utc`              | UTC date when the order item was validated. This validation can be independent of the plan code (bar code), since some order items don't have a plan code but can be validated.                                                                                                                                                                                                                      | 2021-01-01T00:00:00Z                              |\n| `rating_comment`                  | Comment from the ticket user after attending the event.                                                                                                                                                                                                                                                                                                                                              | Great experience!                                 |\n| `rating_value`                    | Rating given by the ticket user after attending the event, ranging from 1 to 5.                                                                                                                                                                                                                                                                                                                      | 5.0                                               |\n| `surcharge`                       | Surcharge applied to the ticket.                                                                                                                                                                                                                                                                                                                                                                     | 2.0                                               |\n| `status`                          | If the ticket is active, transferred, or cancelled. ACTIVE: means that the ticket ID can be redeemed or it is redeemed. CANCELLED: means that the ticket ID can't be redeemed since it has been cancelled. TRANSFERRED: means that the ticket ID can't be used since it has been fully transferred to another user.                                                                                  | ACTIVE                                            |\n| `unitary_price`                   | Unitary price of the purchased ticket.                                                                                                                                                                                                                                                                                                                                                               | 50.0                                              |\n| `metadata`                        | Partner-supplied identifiers for reconciliation against the partner's own system of record. **Opt-in via `included_fields=metadata`.** NULL when the partner did not provide any reporting metadata for the order item.                                                                                                                                                                              | _See `order_item.metadata` documentation below_   |\n| `owner`                           | Order item owner information.                                                                                                                                                                                                                                                                                                                                                                        | _See `order_item.owner` documentation below_      |\n| `plan_codes`                      | Plan code associated with the order item.                                                                                                                                                                                                                                                                                                                                                            | _See `order_item.plan_codes` documentation below_ |\n| `session`                         | Session information.                                                                                                                                                                                                                                                                                                                                                                                 | _See `order_item.session` documentation below_    |\n| `pack`                            | Pack information if the order item belongs to a pack. `null` when the order item does not belong to a pack.                                                                                                                                                                                                                                                                                          | _See `order_item.pack` documentation below_       |\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order_item.metadata</code></span></summary>\n\nPartner-supplied identifiers attached at the time of purchase, intended to help partners reconcile Fever order items against rows in their own system of record (box-office ticket IDs, internal SKUs, subproduct variants, etc.). Only present when the request opts in via `included_fields=metadata`; NULL when the partner did not provide any reporting metadata for the order item.\n\n| Column Name              | Description                                                                                                                                                                                                     | Example value |\n|--------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|\n| `external_id`            | Partner-supplied external identifier for the order item, as sent by the partner's integration when the order was placed.                                                                                        | CJ51001B      |\n| `external_subproduct_id` | Partner-supplied external subproduct identifier for the order item, used when a single plan exposes multiple distinguishable subproducts (e.g., adult vs. child ticket variants, add-ons, seating categories).  | ADULTO        |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order_item.owner</code></span></summary>\n\n| Column Name            | Description                                                                                                     | Example value    |\n|------------------------|-----------------------------------------------------------------------------------------------------------------|------------------|\n| `id`                   | Unique ID of the person who owns the ticket.                                                                    | 123456           |\n| `first_name`           | First name of the owner of the ticket.                                                                          | John             |\n| `last_name`            | Last name of the owner of the ticket.                                                                           | Doe              |\n| `email`                | Email of the owner of the ticket.                                                                               | test@example.com |\n| `date_of_birthday`     | Date of birth of the owner of the ticket.                                                                       | 1990-01-01       |\n| `marketing_preference` | Indicates whether the user accepted receiving marketing communications from the partner in the checkout screen. | true             |\n| `language`             | Language of the owner of the ticket, extracted from the device locale. The format is ISO 639-1 (two letters).   | en               |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order_item.plan_codes</code></span></summary>\n\n| Column Name         | Description                                                                                        | Example value        |\n|---------------------|----------------------------------------------------------------------------------------------------|----------------------|\n| `id`                | Unique ID of the plan code. A plan code is the unique code needed for redemption to join an event. | 111                  |\n| `cd_barcode`        | Barcode code associated to the plan code.                                                          | A1B2C3               |\n| `created_date_utc`  | UTC date of the creation of the plan code.                                                         | 2021-01-01T00:00:00Z |\n| `modified_date_utc` | UTC date of the last modification of the plan code.                                                | 2021-01-01T00:00:00Z |\n| `redeemed_date_utc` | UTC date when the plan code was redeemed.                                                          | 2021-01-01T00:00:00Z |\n| `is_cancelled`      | Whether the plan code is cancelled or not.                                                         | false                |\n| `is_validated`      | Whether the plan code has been validated or not.                                                   | true                 |\n\n</details>\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order_item.session</code></span></summary>\n\n| Column Name                  | Description                                                                                                                          | Example value                                        |\n|------------------------------|--------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|\n| `id`                         | Unique ID of the session. A session represents a specific date and ticket type of a plan, and also the product the client purchased. | 123456                                               |\n| `name`                       | Name of the session, providing a short description of the product the client purchased.                                              | Session Name                                         |\n| `end_date_utc`               | UTC end date of the session.                                                                                                         | 2021-01-01T00:00:00Z                                 |\n| `first_purchasable_date_utc` | UTC date of the first purchasable date of the session.                                                                               | 2021-01-01T00:00:00Z                                 |\n| `is_addon`                   | Indicates whether the session is an addon.                                                                                           | false                                                |\n| `is_wait_list`               | Indicates whether the session is actually a waitlist.                                                                                | false                                                |\n| `start_date_utc`             | UTC start date of the session.                                                                                                       | 2021-01-01T00:00:00Z                                 |\n| `venue`                      | Venue information.                                                                                                                   | _See `order_item.session.venue` documentation below_ |\n\n<details>\n<summary><span style=\"font-size:14pt;\"><code>order_item.session.venue</code></span></summary>\n\n| Column Name | Description                                                 | Example value |\n|-------------|-------------------------------------------------------------|---------------|\n| `city`      | City of the venue where the session takes place.            | Madrid        |\n| `country`   | Country of the venue where the session takes place in ISO3. | Spain         |\n| `name`      | Name of the venue where the session takes place.            | Venue Name    |\n| `timezone`  | Timezone of the venue where the session takes place.        | Europe/Madrid |\n\n</details>\n\n</details>\n\n<details>\n<summary><span style=\"font-size:16pt;\"><code>order_item.pack</code></span></summary>\n\nPack information for order items that belong to a pack. `null` when the order item does not belong to a pack.\n\n| Column Name    | Description                                                                                                                                                                                                                     | Example value |\n|----------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|---------------|\n| `id`           | Unique identifier of the pack unit. Groups all member order items belonging to the same purchased pack.                                                                                                                         | 11223         |\n| `session_id`   | Unique catalog session ID for the pack. Matches the `id` returned by `GET /v1/sessions`. Stable across all purchases of the same pack session. Use this instead of `session_name`, which is not unique. `null` when the item does not belong to a pack. | 284360344 |\n| `session_name` | Pack session label (display name of the pack). Not unique — multiple packs across different plans may share the same label.                                                                                                     | Family Pack   |\n\n</details>\n\n</details>\n\n</details>\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "cb030875-1833-4a21-b7f0-c41756280877",
+          "name": "Request order items report",
+          "request": {
+            "name": "Request order items report",
+            "description": {
+              "content": "Create a request to get a new order items report within the given time range.The search will be processed asynchronously, being able to fetch the result from the provided search ID",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "reports",
+                "order-items",
+                "search"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"order_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"date_field\": \"<string>\",\n  \"date_from\": \"<string>\",\n  \"date_to\": \"<string>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "response": [
+            {
+              "id": "bbca9602-f3e8-4ed9-81de-afaae00f9eeb",
+              "name": "Request was created successfully but is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"order_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"date_field\": \"<string>\",\n  \"date_from\": \"<string>\",\n  \"date_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "8db4bf3c-3771-4103-be95-b27fda584e3d",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"order_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"date_field\": \"<string>\",\n  \"date_from\": \"<string>\",\n  \"date_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9efb1470-1940-42c4-ab9e-9043e4504306",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"order_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"date_field\": \"<string>\",\n  \"date_from\": \"<string>\",\n  \"date_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "47e8b674-4e3b-4205-b4b9-94c4ff4c7ffa",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"order_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"date_field\": \"<string>\",\n  \"date_from\": \"<string>\",\n  \"date_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "bc58cbdc-6d6d-4c5c-a72e-7bf38cb231d5",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"order_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"plan_ids\": [\n    \"<integer>\",\n    \"<integer>\"\n  ],\n  \"date_field\": \"<string>\",\n  \"date_from\": \"<string>\",\n  \"date_to\": \"<string>\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                }
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        },
+        {
+          "id": "aa4952e1-35d5-4276-96b3-7cee6edf7bba",
+          "name": "Get order items report",
+          "request": {
+            "name": "Get order items report",
+            "description": {
+              "content": "Get an existing order items report from `search_id`, allowing to pass a specific `page` number. In case the search is still processing, it will return a `202` status code and you should retry it again until it is ready. Otherwise, it will return a `200` code and a sales report having list of order items. Notice that the `partition_info` metadata is only returned when `page=0`, being `null` for the rest of the pages",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "reports",
+                "order-items",
+                "search",
+                ":search_id"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [
+                {
+                  "disabled": false,
+                  "key": "page",
+                  "value": "0"
+                },
+                {
+                  "disabled": false,
+                  "key": "included_fields",
+                  "value": "<string>",
+                  "description": "Optional fields to include in the response"
+                },
+                {
+                  "disabled": false,
+                  "key": "included_fields",
+                  "value": "<string>",
+                  "description": "Optional fields to include in the response"
+                }
+              ],
+              "variable": [
+                {
+                  "disabled": false,
+                  "type": "any",
+                  "value": "<uuid>",
+                  "key": "search_id",
+                  "description": "(Required) "
+                }
+              ]
+            },
+            "header": [
+              {
+                "disabled": false,
+                "description": "User id from the user that you want to impersonate",
+                "key": "user-id-to-impersonate",
+                "value": "<integer>"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "GET",
+            "auth": {
+              "type": "oauth2",
+              "oauth2": [
+                {
+                  "key": "accessTokenUrl",
+                  "value": "/v1/auth/token"
+                },
+                {
+                  "key": "grant_type",
+                  "value": "password_credentials"
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "8a685c22-2afe-4d30-a812-4d2b20fa7ca7",
+              "name": "Search was obtained successfully",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"data\": [\n    {\n      \"id\": 123456,\n      \"parent_order_id\": 6914,\n      \"buyer\": {\n        \"id\": 902,\n        \"date_of_birthday\": \"string\",\n        \"email\": \"string\",\n        \"first_name\": \"string\",\n        \"language\": \"string\",\n        \"last_name\": \"string\",\n        \"marketing_preference\": true,\n        \"b2b_end_user\": {\n          \"id\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"email\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"first_name\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"last_name\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        }\n      },\n      \"created_date_utc\": \"string\",\n      \"updated_date_utc\": \"string\",\n      \"order_updated_date_utc\": \"string\",\n      \"surcharge\": 2439.718253789618,\n      \"currency\": \"string\",\n      \"purchase_channel\": \"string\",\n      \"channel\": \"string\",\n      \"payment_method\": \"string\",\n      \"purchase_location_source\": {\n        \"id_geo_name\": 6172,\n        \"city_name\": \"string\",\n        \"country_code\": \"string\",\n        \"region_code\": \"string\",\n        \"postal_code\": \"string\",\n        \"quality\": \"UNKNOWN\"\n      },\n      \"billing_zip_code\": \"string\",\n      \"partner\": {\n        \"id\": 1234,\n        \"name\": \"string\"\n      },\n      \"plan\": {\n        \"id\": 1234,\n        \"gallery\": [\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        ],\n        \"name\": \"string\",\n        \"taxonomies\": [\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        ]\n      },\n      \"coupon\": {\n        \"name\": \"string\",\n        \"code\": \"string\",\n        \"discount\": 2413.2404605583233,\n        \"kind\": \"string\"\n      },\n      \"assigned_seats\": [\n        {\n          \"id\": 123456,\n          \"name\": \"string\",\n          \"seating_provider\": \"string\",\n          \"seating_provider_seat_reference\": \"string\"\n        },\n        {\n          \"id\": 123456,\n          \"name\": \"string\",\n          \"seating_provider\": \"string\",\n          \"seating_provider_seat_reference\": \"string\"\n        }\n      ],\n      \"booking_questions\": [\n        {\n          \"id\": \"123456\",\n          \"question\": \"string\",\n          \"answers\": [\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          ],\n          \"index\": 4192\n        },\n        {\n          \"id\": \"123456\",\n          \"question\": \"string\",\n          \"answers\": [\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          ],\n          \"index\": 9354\n        }\n      ],\n      \"business\": {\n        \"id\": \"350e9b69-7ae7-f0c7-2bd6-4fa2aa6a26ff\",\n        \"name\": \"string\",\n        \"tax_id\": \"string\"\n      },\n      \"utm\": {\n        \"campaign\": \"string\",\n        \"content\": \"string\",\n        \"medium\": \"string\",\n        \"source\": \"string\",\n        \"term\": \"string\",\n        \"referring_domain\": \"string\"\n      },\n      \"order_items\": [\n        {\n          \"id\": 668,\n          \"ticket_id\": 5039,\n          \"booked_slot_id\": 9970,\n          \"cancellation_date_utc\": \"string\",\n          \"cancellation_type\": \"string\",\n          \"created_date_utc\": \"string\",\n          \"discount\": 3825.925154858162,\n          \"is_invite\": false,\n          \"modified_date_utc\": \"string\",\n          \"purchase_date_utc\": \"string\",\n          \"event_start_date_utc\": \"string\",\n          \"validated_date_utc\": \"string\",\n          \"rating_comment\": \"string\",\n          \"rating_value\": 548.2484888394879,\n          \"surcharge\": 9825.848592336564,\n          \"status\": \"string\",\n          \"unitary_price\": 6984.272298846103,\n          \"owner\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"pack\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"plan_code\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"session\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"metadata\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        {\n          \"id\": 4010,\n          \"ticket_id\": 6620,\n          \"booked_slot_id\": 4204,\n          \"cancellation_date_utc\": \"string\",\n          \"cancellation_type\": \"string\",\n          \"created_date_utc\": \"string\",\n          \"discount\": 4403.817694895344,\n          \"is_invite\": true,\n          \"modified_date_utc\": \"string\",\n          \"purchase_date_utc\": \"string\",\n          \"event_start_date_utc\": \"string\",\n          \"validated_date_utc\": \"string\",\n          \"rating_comment\": \"string\",\n          \"rating_value\": 3722.0147292223214,\n          \"surcharge\": 1657.7095179117462,\n          \"status\": \"string\",\n          \"unitary_price\": 2463.0143828276196,\n          \"owner\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"pack\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"plan_code\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"session\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"metadata\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        }\n      ],\n      \"staff_notes\": [\n        \"string\",\n        \"string\"\n      ],\n      \"booked_slots\": [\n        {\n          \"id\": 9702,\n          \"timeslot_utc\": \"string\",\n          \"slot_count\": 5277,\n          \"occupancy_count\": 7002,\n          \"party_size\": 2325,\n          \"is_removed\": false,\n          \"activity\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"asset\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        {\n          \"id\": 1705,\n          \"timeslot_utc\": \"string\",\n          \"slot_count\": 2666,\n          \"occupancy_count\": 8934,\n          \"party_size\": 2346,\n          \"is_removed\": false,\n          \"activity\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"asset\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        }\n      ],\n      \"payment_details\": [\n        {\n          \"id\": \"string\",\n          \"card_brand\": \"string\",\n          \"payment_method\": \"string\"\n        },\n        {\n          \"id\": \"string\",\n          \"card_brand\": \"string\",\n          \"payment_method\": \"string\"\n        }\n      ],\n      \"order_group_id\": 1258,\n      \"is_main_group_order\": false\n    },\n    {\n      \"id\": 123456,\n      \"parent_order_id\": 1837,\n      \"buyer\": {\n        \"id\": 1471,\n        \"date_of_birthday\": \"string\",\n        \"email\": \"string\",\n        \"first_name\": \"string\",\n        \"language\": \"string\",\n        \"last_name\": \"string\",\n        \"marketing_preference\": false,\n        \"b2b_end_user\": {\n          \"id\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"email\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"first_name\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"last_name\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        }\n      },\n      \"created_date_utc\": \"string\",\n      \"updated_date_utc\": \"string\",\n      \"order_updated_date_utc\": \"string\",\n      \"surcharge\": 9286.8500581803,\n      \"currency\": \"string\",\n      \"purchase_channel\": \"string\",\n      \"channel\": \"string\",\n      \"payment_method\": \"string\",\n      \"purchase_location_source\": {\n        \"id_geo_name\": 2177,\n        \"city_name\": \"string\",\n        \"country_code\": \"string\",\n        \"region_code\": \"string\",\n        \"postal_code\": \"string\",\n        \"quality\": \"UNKNOWN\"\n      },\n      \"billing_zip_code\": \"string\",\n      \"partner\": {\n        \"id\": 1234,\n        \"name\": \"string\"\n      },\n      \"plan\": {\n        \"id\": 1234,\n        \"gallery\": [\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        ],\n        \"name\": \"string\",\n        \"taxonomies\": [\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        ]\n      },\n      \"coupon\": {\n        \"name\": \"string\",\n        \"code\": \"string\",\n        \"discount\": 5459.7108773531245,\n        \"kind\": \"string\"\n      },\n      \"assigned_seats\": [\n        {\n          \"id\": 123456,\n          \"name\": \"string\",\n          \"seating_provider\": \"string\",\n          \"seating_provider_seat_reference\": \"string\"\n        },\n        {\n          \"id\": 123456,\n          \"name\": \"string\",\n          \"seating_provider\": \"string\",\n          \"seating_provider_seat_reference\": \"string\"\n        }\n      ],\n      \"booking_questions\": [\n        {\n          \"id\": \"123456\",\n          \"question\": \"string\",\n          \"answers\": [\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          ],\n          \"index\": 2550\n        },\n        {\n          \"id\": \"123456\",\n          \"question\": \"string\",\n          \"answers\": [\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            },\n            {\n              \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n            }\n          ],\n          \"index\": 1282\n        }\n      ],\n      \"business\": {\n        \"id\": \"4130fee9-cf99-3668-eedb-5cdb80370458\",\n        \"name\": \"string\",\n        \"tax_id\": \"string\"\n      },\n      \"utm\": {\n        \"campaign\": \"string\",\n        \"content\": \"string\",\n        \"medium\": \"string\",\n        \"source\": \"string\",\n        \"term\": \"string\",\n        \"referring_domain\": \"string\"\n      },\n      \"order_items\": [\n        {\n          \"id\": 1422,\n          \"ticket_id\": 1706,\n          \"booked_slot_id\": 2612,\n          \"cancellation_date_utc\": \"string\",\n          \"cancellation_type\": \"string\",\n          \"created_date_utc\": \"string\",\n          \"discount\": 7733.597229150741,\n          \"is_invite\": true,\n          \"modified_date_utc\": \"string\",\n          \"purchase_date_utc\": \"string\",\n          \"event_start_date_utc\": \"string\",\n          \"validated_date_utc\": \"string\",\n          \"rating_comment\": \"string\",\n          \"rating_value\": 6350.634272784755,\n          \"surcharge\": 9104.907409275573,\n          \"status\": \"string\",\n          \"unitary_price\": 5128.188045562476,\n          \"owner\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"pack\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"plan_code\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"session\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"metadata\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        {\n          \"id\": 5679,\n          \"ticket_id\": 6524,\n          \"booked_slot_id\": 1167,\n          \"cancellation_date_utc\": \"string\",\n          \"cancellation_type\": \"string\",\n          \"created_date_utc\": \"string\",\n          \"discount\": 6373.2422119833445,\n          \"is_invite\": true,\n          \"modified_date_utc\": \"string\",\n          \"purchase_date_utc\": \"string\",\n          \"event_start_date_utc\": \"string\",\n          \"validated_date_utc\": \"string\",\n          \"rating_comment\": \"string\",\n          \"rating_value\": 8565.53951975418,\n          \"surcharge\": 5632.2663583977765,\n          \"status\": \"string\",\n          \"unitary_price\": 5811.221928577849,\n          \"owner\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"pack\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"plan_code\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"session\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"metadata\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        }\n      ],\n      \"staff_notes\": [\n        \"string\",\n        \"string\"\n      ],\n      \"booked_slots\": [\n        {\n          \"id\": 7870,\n          \"timeslot_utc\": \"string\",\n          \"slot_count\": 8450,\n          \"occupancy_count\": 434,\n          \"party_size\": 3707,\n          \"is_removed\": false,\n          \"activity\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"asset\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        },\n        {\n          \"id\": 8184,\n          \"timeslot_utc\": \"string\",\n          \"slot_count\": 598,\n          \"occupancy_count\": 9555,\n          \"party_size\": 1406,\n          \"is_removed\": true,\n          \"activity\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          },\n          \"asset\": {\n            \"value\": \"<Error: Too many levels of nesting to fake this schema>\"\n          }\n        }\n      ],\n      \"payment_details\": [\n        {\n          \"id\": \"string\",\n          \"card_brand\": \"string\",\n          \"payment_method\": \"string\"\n        },\n        {\n          \"id\": \"string\",\n          \"card_brand\": \"string\",\n          \"payment_method\": \"string\"\n        }\n      ],\n      \"order_group_id\": 5419,\n      \"is_main_group_order\": false\n    }\n  ],\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    },\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/01b26479-0203-63c9-0000-d37572ae91ea?page=0\",\n      \"size\": 15058,\n      \"rows\": 4099\n    }\n  ],\n  \"params\": {\n    \"order_ids\": [\n      \"<integer>\",\n      \"<integer>\"\n    ],\n    \"plan_ids\": [\n      \"<integer>\",\n      \"<integer>\"\n    ],\n    \"date_field\": \"<string>\",\n    \"date_from\": \"<string>\",\n    \"date_to\": \"<string>\"\n  }\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "40134ac6-e781-4cdc-b975-b369fdbe376f",
+              "name": "Request is still running asynchronously.",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Accepted",
+              "code": 202,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "a75cd2a8-31e7-4def-b4ca-72608e3d0c1f",
+              "name": "Bad Request",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Bad Request",
+              "code": 400,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search ID 1234 is not valid\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "6e52616f-49ca-486d-b06b-cb154fb2d514",
+              "name": "Forbidden",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Forbidden",
+              "code": 403,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"User test@example.com is not allowed to access the following fields: 'forbidden_field_1', 'forbidden_field_2'\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "43746935-22d2-42a8-930d-ba1cb56b6685",
+              "name": "Not Found",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Not Found",
+              "code": 404,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search 01b571aa-0203-e36d-0000-0d3758abb35d not found.\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "ffac4beb-8e3b-40ef-a0a9-bff174d55fa1",
+              "name": "Request Timeout",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Request Timeout",
+              "code": 408,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"The request timed out. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "9d2b1a2d-fb9b-4cdd-826f-e169ac61b55e",
+              "name": "Search expired",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Gone",
+              "code": 410,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Search expired. Please create a new one\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "eeec2d40-2882-4901-a3ee-ea91c1752ddf",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "838d708a-178d-4089-a276-31cb8065f677",
+              "name": "Too Many Requests",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"Server is busy. Please retry your query later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "51deba8e-a4ce-465d-9395-4a941d9383cd",
+              "name": "Internal Server Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "reports",
+                    "order-items",
+                    "search",
+                    ":search_id"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [
+                    {
+                      "key": "page",
+                      "value": "0"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    },
+                    {
+                      "key": "included_fields",
+                      "value": "<string>"
+                    }
+                  ],
+                  "variable": [
+                    {
+                      "disabled": false,
+                      "type": "any",
+                      "value": "<uuid>",
+                      "key": "search_id",
+                      "description": "(Required) "
+                    }
+                  ]
+                },
+                "header": [
+                  {
+                    "description": {
+                      "content": "Added as a part of security scheme: oauth2",
+                      "type": "text/plain"
+                    },
+                    "key": "Authorization",
+                    "value": "<token>"
+                  },
+                  {
+                    "disabled": false,
+                    "description": "User id from the user that you want to impersonate",
+                    "key": "user-id-to-impersonate",
+                    "value": "<integer>"
+                  },
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "GET",
+                "body": {}
+              },
+              "status": "Internal Server Error",
+              "code": 500,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": \"An internal server error occurred. Please try again later\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "3b6bc701-86af-4b73-a68e-71595f510e2f",
+    "name": "Fever - Reporting Authentication Order Items API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Access detailed event sales data through a reliable REST API.\n\n# Introduction\n\nThe Fever Reporting API is a RESTful service that gives our partners access to in-depth insights into their event sales\non Fever. With this API, partners can retrieve comprehensive order data, including ticket information, financial details\n(revenue, surcharges, discounts), plan details, and basic customer data.\n\n## Primary Use Cases\n\nThis API is intended for partners who want to integrate Fever sales data into their internal systems—such as CRMs,\nBusiness Intelligence (BI) platforms, data warehouses, or ERP systems.\n\n## What It’s Not For\n\n**This API is not designed for real-time operational use cases like access control or live inventory tracking.**\nFor those needs, please refer to other Fever APIs specifically built for operational workflows.\n\n## Getting Access\n\nAccess to the Fever Reporting API is granted individually. To request access, reach out to your Fever sales\nrepresentative. They’ll walk you through the process. Once approved, you'll receive credentials to authenticate and\nbegin using the API.\n\n## Extended Documentation (for Authorized Partners)\n\nOnce your access is approved and credentials are issued, you’ll be able to view the full technical documentation here:\n[🔒 Extended Documentation](https://data-reporting-api.prod.feverup.com/v1/documentation).\nIf you haven’t received your credentials yet, you can still access the public section of our documentation, which covers\nmost of the key technical information.\n\n## Playground (for Authorized Partners)\n\nAfter receiving your API credentials, you can access the [▶️ Fever - Reporting API Playground](https://data-reporting-api.prod.feverup.com/v1/playground) to explore\nand test available endpoints.  The Playground is a Swagger UI interface that allows you to:\n- Browse detailed documentation for each endpoint\n- Execute live API requests directly from your browser\n- Authentication is required, so be sure to log in with your credentials before using the interface.\n\n## Status Page\n\nWe are committed to providing a reliable service for our users. To ensure transparency, you can subscribe to\nour [📣 Status Page](https://status.data-reporting-api.prod.feverup.com/) to stay informed about:\n\n- Scheduled maintenance that may temporarily affect the availability of the Reporting API\n- Ongoing incidents and issues impacting the performance or functionality of the API\n- Resolutions and updates on incidents in real-time\n\nBy subscribing, you will receive timely notifications via email, Slack, etc., keeping you updated on any events that\nmight impact your integration with the Reporting API.\n\n<br><br>\n# Quickstart\n\n### Code samples\n\n<details>\n<summary>🐍 Python code sample to extract data from <code>/example-endpoint</code> endpoint</summary>\n\n```python\nimport json\nimport time\nfrom typing import Any\n\nimport requests\n\n\nclass RAPIConnector:\n    def __init__(self, hostname: str, username: str, password: str) -> None:\n        self.hostname = hostname\n        self.__username = username\n        self.__password = password\n        self.__access_token = self.__get_access_token()\n\n    def __get_access_token(self) -> str:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/auth/token\", data={\"username\": self.__username, \"password\": self.__password}\n        )\n        response.raise_for_status()\n        return response.json()[\"access_token\"]\n\n    def __get_request_headers(self) -> dict[str, str]:\n        return {\"Authorization\": f\"Bearer {self.__access_token}\"}\n\n    def post_example_endpoint(self, search_params: dict[str, Any]) -> requests.Response:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/example-endpoint/search\",\n            headers=self.__get_request_headers(),\n            json=search_params,\n        )\n        response.raise_for_status()\n        return response\n\n    def get_example_endpoint(\n            self, search_id: str, page: int = 0) -> requests.Response:\n        return requests.get(\n            f\"https://{self.hostname}/v1/example-endpoint/search/{search_id}\",\n            headers=self.__get_request_headers(),\n            params={\"page\": page},\n        )\n\n    def fetch_all_order_items(self, search_params: dict[str, Any]) -> dict[str, Any]:\n        search = self.post_example_endpoint(search_params=search_params)\n        search_id = search.json()[\"search_id\"]\n        is_ready = False\n        n_attempts = 0\n        while not is_ready and n_attempts < 10:\n            search = self.get_example_endpoint(search_id=search_id)\n            is_ready = True if search.status_code == 200 else False\n            if not is_ready:\n                print(f\"{search.status_code} - Waiting search result to be ready...\")\n            n_attempts += 1\n            time.sleep(1)\n            if n_attempts == 10:\n                raise Exception(\"Search result is not ready after 10 attempts\")\n\n        # Fetch all pages\n        data = search.json()[\"data\"]\n        partition_info = search.json()[\"partition_info\"]\n        total_rows = 0\n        print(f\"Found a total of {len(partition_info)} partitions\")\n        for partition in partition_info:\n            page = partition[\"partition_num\"]\n            total_rows += int(partition[\"rows\"])\n            if page == 0:\n                continue\n            print(f\"Fetching partition {page}...\")\n            search = self.get_example_endpoint(search_id=search_id, page=page)\n            data += search.json()[\"data\"]\n        assert len(data) == total_rows\n        return data\n\n\ndef main() -> None:\n    hostname = \"data-reporting-api.prod.feverup.com\"\n    username = \"<YOUR_USERNAME>\"\n    password = \"<YOUR_PASSWORD>\"\n    rapi_connector = RAPIConnector(hostname=hostname, username=username, password=password)\n    search_params = {\n        \"date_field\": \"CREATED_DATE_UTC\",\n        \"date_from\": \"2024-01-01\",\n        \"date_to\": \"2024-02-01\",\n    }\n    raw_path = \"example_endpoint_raw.json\"\n\n    print(\"### Extracting data from Reporting API ###\")\n    data = rapi_connector.fetch_all_order_items(search_params=search_params)\n\n    # Save the raw data to a JSON file\n    with open(raw_path, \"w\") as f:\n        f.write(json.dumps(data, indent=4))\n        print(f\"Data extracted and saved to {raw_path}\")\n\n\nif __name__ == \"__main__\":\n    main()\n```\n\n</details>\n\n## Authentication\n\nThe first step is to authenticate with the API. The API uses the OAuth 2.0 protocol to authenticate users.\nIn order to fetch a valid token, you must use the following endpoint:\n\n- `POST /oauth/token` -> It will return a valid `token` to be used in the following requests from your `username`\n  and `password` credentials.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/auth/token'\n  -H 'Accept: application/json'\n  -H 'Content-Type: application/x-www-form-urlencoded'\n  -d 'username=<YOUR_USERNAME>&password=<YOUR_PASSWORD>'\n```\n\nRemember to replace `<YOUR_USERNAME>` and `<YOUR_PASSWORD>` with the correct values.\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"access_token\": \"<YOUR_ACCESS_TOKEN>\",\n  \"token_type\": \"bearer\"\n}\n```\n\n</details>\n\n## How to request data for any endpoint in the Reporting API?\n\nThe approach is analogous for all the endpoints in the API. The API works with asynchronous requests that return\npaginated results. This means that for every request, you will need to follow these steps:\n\n1. Create a request asynchronously, in order to obtain a **search ID**. When creating this request, certain parameters\n   might be requested in order to filter the expected data, like entity IDs, dates, etc.\n2. Fetch the paginated results for the requested data. This step will require the **search ID** obtained in the previous\n   step, and it will return the paginated data for the requested report.\n\n<details>\n<summary>➡️ Example requesting data for <code>/reports/order-items</code> endpoint</summary>\n\n### 1. Create the request asynchronously to get order items data\n\nThe first step is to create a new search asynchronously in order to fetch the order items. You can do this by sending\na `POST` request to the endpoint.\n\n- `POST /xxx/search`: It will create a new search. The request body must contain the search criteria, allowing to search\n  by creation or update date among other parameters, depending on the endpoint itself. The response will contain the *\n  *search ID** that you can later use to fetch the paginated result.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n  ```shell\n  curl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search'\n    -H 'accept: application/json'\n    -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n    -H 'Content-Type: application/json'\n    -d '{ \"param_a\": \"<value>\" }'\n  ```\n\nRemember to replace `<YOUR_ACCESS_TOKEN>` with the correct value. You can check all the accepted parameters in the\nendpoints documentation (available in private docs).\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"<YOUR_SEARCH_ID>\"\n}\n```\n\nThe response will contain the **search ID** that you can use to fetch the paginated result afterwards.\n\n</details>\n\n### 2. Fetch the paginated results for the requested data\n\nThe last step is to fetch the search result data. You can do this by sending a `GET` request to\nthe `/xxx/{search_id}` endpoint.\n\n- `GET /xxx/<YOUR_SEARCH_ID>?page=<YOUR_PAGE_ID>`: It will return the search data for\n  the given ID and page number. By default, the page number is `0`, and only mandatory columns are returned.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'GET' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search/<YOUR_SEARCH_ID?page=<YOUR_PAGE_ID>\n  -H 'accept: application/json'\n  -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n```\n\nFor instance, this request will retrieve all mandatory fields plus `aaa` and `bbb` fields. Remember to\nreplace `<YOUR_SEARCH_ID>`, and `<YOUR_PAGE_ID>` with the correct values.\n\nOnce the output is ready to be consumed, it will return a JSON object containing the orders data for the given search ID\nand page number. Otherwise, it will return a `202` status code with a message indicating that the data is still being\nprocessed.\n\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=0\",\n      \"size\": 1234,\n      \"rows\": 100\n    },\n    {\n      \"partition_num\": 1,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=1\",\n      \"size\": 5678,\n      \"rows\": 100\n    }\n  ],\n  \"data\": [\n    \"your data records\"\n  ]\n}\n```\n\n</details>\n\n</details>\n\n<br><br>\n# Rate limits\n\nThe Fever Reporting API has rate limits on its endpoints.\n\n- **Authentication**: 20 requests/minute.\n- **Other endpoints**: 200 requests/minute.\n\nIf you exceed these limits, you will receive a `429 Too Many Requests` response. In this case, you should wait for one minute before making additional requests.\n\n<br><br>\n# FAQ\n\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How are <b><i>cancellations</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, cancellations are handled at the individual order item level. Each order item represents a single unit (ticket, add-on, etc.) within an order.\n>\n> When an order item is canceled, its `status` field will change to `CANCELED`.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">💡 <b>Example</b></summary>\n>\n> #### Before cancellation\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After cancellation of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"CANCELED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How are <b><i>transfers</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, transfers are handled at the individual order item level. Each order item represents a single unit, so when an order item is transferred, the owner information is updated to reflect the new owner.\n>\n> When an order item is transferred, the `owner` field will be updated with the new owner's information. The order item maintains its `PURCHASED` status but now belongs to the new owner.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">💡 <b>Example</b></summary>\n>\n> #### Before transfer\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   // ... order fields\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\",\n>         \"email\": \"alice@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After transfer of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Charlie\",\n>         \"email\": \"charlie@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How is the param <code>UPDATED_DATE_UTC</code> updated in the `/reports/order-items` endpoint?</summary>\n> <br>\n> Please note that not all fields in the returned JSON are eligible to update the value of <code>UPDATED_DATE_UTC</code>. Only fields directly related to the purchase and order items themselves will trigger a change in this value.\n> </details>\n\n\nContact Support:\n Name: Support\n Email: data-support@feverup.com",
+      "type": "text/plain"
+    }
+  }
+}

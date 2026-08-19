@@ -1,0 +1,205 @@
+{
+  "item": [
+    {
+      "id": "e7f65afb-40aa-4df7-b976-d141efaf9a7c",
+      "name": "Authentication",
+      "description": {
+        "content": "This endpoint is used to authenticate a user. It requires a username and password to be passed in the request body. If\nthe user is authenticated successfully, a token is returned in the response body. This token is used to authenticate the\nuser in subsequent requests.\n\n⚠️ The token expiration time is **30 minutes**. After that time, the user will need to authenticate again to get a new token.\n",
+        "type": "text/plain"
+      },
+      "item": [
+        {
+          "id": "5a1b1223-e2aa-47a1-a242-8739dfa81bbb",
+          "name": "Request auth token",
+          "request": {
+            "name": "Request auth token",
+            "description": {
+              "content": "Request JWT auth token from username and password",
+              "type": "text/plain"
+            },
+            "url": {
+              "path": [
+                "auth",
+                "token"
+              ],
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "query": [],
+              "variable": []
+            },
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/x-www-form-urlencoded"
+              },
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "method": "POST",
+            "auth": null,
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                {
+                  "disabled": false,
+                  "key": "username",
+                  "value": "<string>",
+                  "description": "(Required) "
+                },
+                {
+                  "disabled": false,
+                  "key": "password",
+                  "value": "<password>",
+                  "description": "(Required) "
+                }
+              ]
+            }
+          },
+          "response": [
+            {
+              "id": "2061eb42-928d-4037-9cdf-3cae8eb1805f",
+              "name": "Successful Response",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "auth",
+                    "token"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "key": "username",
+                      "value": "<string>"
+                    },
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "key": "password",
+                      "value": "<password>"
+                    }
+                  ]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"access_token\": \"eyJhbGc1234\",\n  \"token_type\": \"Bearer\"\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            },
+            {
+              "id": "646c5c29-902f-4815-af7c-afce9bf71e51",
+              "name": "Validation Error",
+              "originalRequest": {
+                "url": {
+                  "path": [
+                    "auth",
+                    "token"
+                  ],
+                  "host": [
+                    "{{baseUrl}}"
+                  ],
+                  "query": [],
+                  "variable": []
+                },
+                "header": [
+                  {
+                    "key": "Accept",
+                    "value": "application/json"
+                  }
+                ],
+                "method": "POST",
+                "body": {
+                  "mode": "urlencoded",
+                  "urlencoded": [
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "key": "username",
+                      "value": "<string>"
+                    },
+                    {
+                      "disabled": false,
+                      "description": {
+                        "content": "(Required) ",
+                        "type": "text/plain"
+                      },
+                      "key": "password",
+                      "value": "<password>"
+                    }
+                  ]
+                }
+              },
+              "status": "Unprocessable Entity (WebDAV) (RFC 4918)",
+              "code": 422,
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "body": "{\n  \"detail\": [\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    },\n    {\n      \"loc\": [\n        \"string\",\n        \"string\"\n      ],\n      \"msg\": \"string\",\n      \"type\": \"string\"\n    }\n  ]\n}",
+              "cookie": [],
+              "_postman_previewlanguage": "json"
+            }
+          ],
+          "event": [],
+          "protocolProfileBehavior": {
+            "disableBodyPruning": true
+          }
+        }
+      ],
+      "event": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "type": "string",
+      "value": "/v1",
+      "key": "baseUrl"
+    }
+  ],
+  "info": {
+    "_postman_id": "ede7dcb5-ae11-4625-929b-68f69095ee04",
+    "name": "Fever - Reporting Authentication API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": {
+      "content": "Access detailed event sales data through a reliable REST API.\n\n# Introduction\n\nThe Fever Reporting API is a RESTful service that gives our partners access to in-depth insights into their event sales\non Fever. With this API, partners can retrieve comprehensive order data, including ticket information, financial details\n(revenue, surcharges, discounts), plan details, and basic customer data.\n\n## Primary Use Cases\n\nThis API is intended for partners who want to integrate Fever sales data into their internal systems—such as CRMs,\nBusiness Intelligence (BI) platforms, data warehouses, or ERP systems.\n\n## What It’s Not For\n\n**This API is not designed for real-time operational use cases like access control or live inventory tracking.**\nFor those needs, please refer to other Fever APIs specifically built for operational workflows.\n\n## Getting Access\n\nAccess to the Fever Reporting API is granted individually. To request access, reach out to your Fever sales\nrepresentative. They’ll walk you through the process. Once approved, you'll receive credentials to authenticate and\nbegin using the API.\n\n## Extended Documentation (for Authorized Partners)\n\nOnce your access is approved and credentials are issued, you’ll be able to view the full technical documentation here:\n[🔒 Extended Documentation](https://data-reporting-api.prod.feverup.com/v1/documentation).\nIf you haven’t received your credentials yet, you can still access the public section of our documentation, which covers\nmost of the key technical information.\n\n## Playground (for Authorized Partners)\n\nAfter receiving your API credentials, you can access the [▶️ Fever - Reporting API Playground](https://data-reporting-api.prod.feverup.com/v1/playground) to explore\nand test available endpoints.  The Playground is a Swagger UI interface that allows you to:\n- Browse detailed documentation for each endpoint\n- Execute live API requests directly from your browser\n- Authentication is required, so be sure to log in with your credentials before using the interface.\n\n## Status Page\n\nWe are committed to providing a reliable service for our users. To ensure transparency, you can subscribe to\nour [📣 Status Page](https://status.data-reporting-api.prod.feverup.com/) to stay informed about:\n\n- Scheduled maintenance that may temporarily affect the availability of the Reporting API\n- Ongoing incidents and issues impacting the performance or functionality of the API\n- Resolutions and updates on incidents in real-time\n\nBy subscribing, you will receive timely notifications via email, Slack, etc., keeping you updated on any events that\nmight impact your integration with the Reporting API.\n\n<br><br>\n# Quickstart\n\n### Code samples\n\n<details>\n<summary>🐍 Python code sample to extract data from <code>/example-endpoint</code> endpoint</summary>\n\n```python\nimport json\nimport time\nfrom typing import Any\n\nimport requests\n\n\nclass RAPIConnector:\n    def __init__(self, hostname: str, username: str, password: str) -> None:\n        self.hostname = hostname\n        self.__username = username\n        self.__password = password\n        self.__access_token = self.__get_access_token()\n\n    def __get_access_token(self) -> str:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/auth/token\", data={\"username\": self.__username, \"password\": self.__password}\n        )\n        response.raise_for_status()\n        return response.json()[\"access_token\"]\n\n    def __get_request_headers(self) -> dict[str, str]:\n        return {\"Authorization\": f\"Bearer {self.__access_token}\"}\n\n    def post_example_endpoint(self, search_params: dict[str, Any]) -> requests.Response:\n        response = requests.post(\n            f\"https://{self.hostname}/v1/example-endpoint/search\",\n            headers=self.__get_request_headers(),\n            json=search_params,\n        )\n        response.raise_for_status()\n        return response\n\n    def get_example_endpoint(\n            self, search_id: str, page: int = 0) -> requests.Response:\n        return requests.get(\n            f\"https://{self.hostname}/v1/example-endpoint/search/{search_id}\",\n            headers=self.__get_request_headers(),\n            params={\"page\": page},\n        )\n\n    def fetch_all_order_items(self, search_params: dict[str, Any]) -> dict[str, Any]:\n        search = self.post_example_endpoint(search_params=search_params)\n        search_id = search.json()[\"search_id\"]\n        is_ready = False\n        n_attempts = 0\n        while not is_ready and n_attempts < 10:\n            search = self.get_example_endpoint(search_id=search_id)\n            is_ready = True if search.status_code == 200 else False\n            if not is_ready:\n                print(f\"{search.status_code} - Waiting search result to be ready...\")\n            n_attempts += 1\n            time.sleep(1)\n            if n_attempts == 10:\n                raise Exception(\"Search result is not ready after 10 attempts\")\n\n        # Fetch all pages\n        data = search.json()[\"data\"]\n        partition_info = search.json()[\"partition_info\"]\n        total_rows = 0\n        print(f\"Found a total of {len(partition_info)} partitions\")\n        for partition in partition_info:\n            page = partition[\"partition_num\"]\n            total_rows += int(partition[\"rows\"])\n            if page == 0:\n                continue\n            print(f\"Fetching partition {page}...\")\n            search = self.get_example_endpoint(search_id=search_id, page=page)\n            data += search.json()[\"data\"]\n        assert len(data) == total_rows\n        return data\n\n\ndef main() -> None:\n    hostname = \"data-reporting-api.prod.feverup.com\"\n    username = \"<YOUR_USERNAME>\"\n    password = \"<YOUR_PASSWORD>\"\n    rapi_connector = RAPIConnector(hostname=hostname, username=username, password=password)\n    search_params = {\n        \"date_field\": \"CREATED_DATE_UTC\",\n        \"date_from\": \"2024-01-01\",\n        \"date_to\": \"2024-02-01\",\n    }\n    raw_path = \"example_endpoint_raw.json\"\n\n    print(\"### Extracting data from Reporting API ###\")\n    data = rapi_connector.fetch_all_order_items(search_params=search_params)\n\n    # Save the raw data to a JSON file\n    with open(raw_path, \"w\") as f:\n        f.write(json.dumps(data, indent=4))\n        print(f\"Data extracted and saved to {raw_path}\")\n\n\nif __name__ == \"__main__\":\n    main()\n```\n\n</details>\n\n## Authentication\n\nThe first step is to authenticate with the API. The API uses the OAuth 2.0 protocol to authenticate users.\nIn order to fetch a valid token, you must use the following endpoint:\n\n- `POST /oauth/token` -> It will return a valid `token` to be used in the following requests from your `username`\n  and `password` credentials.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/auth/token'\n  -H 'Accept: application/json'\n  -H 'Content-Type: application/x-www-form-urlencoded'\n  -d 'username=<YOUR_USERNAME>&password=<YOUR_PASSWORD>'\n```\n\nRemember to replace `<YOUR_USERNAME>` and `<YOUR_PASSWORD>` with the correct values.\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"access_token\": \"<YOUR_ACCESS_TOKEN>\",\n  \"token_type\": \"bearer\"\n}\n```\n\n</details>\n\n## How to request data for any endpoint in the Reporting API?\n\nThe approach is analogous for all the endpoints in the API. The API works with asynchronous requests that return\npaginated results. This means that for every request, you will need to follow these steps:\n\n1. Create a request asynchronously, in order to obtain a **search ID**. When creating this request, certain parameters\n   might be requested in order to filter the expected data, like entity IDs, dates, etc.\n2. Fetch the paginated results for the requested data. This step will require the **search ID** obtained in the previous\n   step, and it will return the paginated data for the requested report.\n\n<details>\n<summary>➡️ Example requesting data for <code>/reports/order-items</code> endpoint</summary>\n\n### 1. Create the request asynchronously to get order items data\n\nThe first step is to create a new search asynchronously in order to fetch the order items. You can do this by sending\na `POST` request to the endpoint.\n\n- `POST /xxx/search`: It will create a new search. The request body must contain the search criteria, allowing to search\n  by creation or update date among other parameters, depending on the endpoint itself. The response will contain the *\n  *search ID** that you can later use to fetch the paginated result.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n  ```shell\n  curl -X 'POST' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search'\n    -H 'accept: application/json'\n    -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n    -H 'Content-Type: application/json'\n    -d '{ \"param_a\": \"<value>\" }'\n  ```\n\nRemember to replace `<YOUR_ACCESS_TOKEN>` with the correct value. You can check all the accepted parameters in the\nendpoints documentation (available in private docs).\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"message\": \"Asynchronous execution in progress. Use provided query id to perform query monitoring and management.\",\n  \"search_id\": \"<YOUR_SEARCH_ID>\"\n}\n```\n\nThe response will contain the **search ID** that you can use to fetch the paginated result afterwards.\n\n</details>\n\n### 2. Fetch the paginated results for the requested data\n\nThe last step is to fetch the search result data. You can do this by sending a `GET` request to\nthe `/xxx/{search_id}` endpoint.\n\n- `GET /xxx/<YOUR_SEARCH_ID>?page=<YOUR_PAGE_ID>`: It will return the search data for\n  the given ID and page number. By default, the page number is `0`, and only mandatory columns are returned.\n\n<details>\n<summary>➡️ Example <code>curl</code> request</summary>\n\n```shell\ncurl -X 'GET' 'https://data-reporting-api.prod.feverup.com/v1/xxx/search/<YOUR_SEARCH_ID?page=<YOUR_PAGE_ID>\n  -H 'accept: application/json'\n  -H 'Authorization: Bearer <YOUR_ACCESS_TOKEN>'\n```\n\nFor instance, this request will retrieve all mandatory fields plus `aaa` and `bbb` fields. Remember to\nreplace `<YOUR_SEARCH_ID>`, and `<YOUR_PAGE_ID>` with the correct values.\n\nOnce the output is ready to be consumed, it will return a JSON object containing the orders data for the given search ID\nand page number. Otherwise, it will return a `202` status code with a message indicating that the data is still being\nprocessed.\n\n</details>\n\n<details>\n<summary>➡️ Example response</summary>\n\n```json\n{\n  \"partition_info\": [\n    {\n      \"partition_num\": 0,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=0\",\n      \"size\": 1234,\n      \"rows\": 100\n    },\n    {\n      \"partition_num\": 1,\n      \"endpoint\": \"/<YOUR_SEARCH_ID>?page=1\",\n      \"size\": 5678,\n      \"rows\": 100\n    }\n  ],\n  \"data\": [\n    \"your data records\"\n  ]\n}\n```\n\n</details>\n\n</details>\n\n<br><br>\n# Rate limits\n\nThe Fever Reporting API has rate limits on its endpoints.\n\n- **Authentication**: 20 requests/minute.\n- **Other endpoints**: 200 requests/minute.\n\nIf you exceed these limits, you will receive a `429 Too Many Requests` response. In this case, you should wait for one minute before making additional requests.\n\n<br><br>\n# FAQ\n\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How are <b><i>cancellations</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, cancellations are handled at the individual order item level. Each order item represents a single unit (ticket, add-on, etc.) within an order.\n>\n> When an order item is canceled, its `status` field will change to `CANCELED`.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">💡 <b>Example</b></summary>\n>\n> #### Before cancellation\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After cancellation of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"CANCELED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How are <b><i>transfers</i></b> handled in the API?</summary>\n> <br>\n>\n> In the `/reports/order-items` endpoint, transfers are handled at the individual order item level. Each order item represents a single unit, so when an order item is transferred, the owner information is updated to reflect the new owner.\n>\n> When an order item is transferred, the `owner` field will be updated with the new owner's information. The order item maintains its `PURCHASED` status but now belongs to the new owner.\n>\n> <details>\n> <summary style=\"font-size:12pt;\">💡 <b>Example</b></summary>\n>\n> #### Before transfer\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   // ... order fields\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Alice\",\n>         \"email\": \"alice@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n>\n> #### After transfer of one order item\n> ```json lines\n> {\n>   \"id\": 12345, // order id\n>   ...\n>   \"order_items\": [\n>     {\n>       \"id\": 1910920,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"ABC123\",\n>       \"owner\": {\n>         \"name\": \"Charlie\",\n>         \"email\": \"charlie@example.com\"\n>       }\n>       ...\n>     },\n>     {\n>       \"id\": 1910921,\n>       \"status\": \"PURCHASED\",\n>       \"barcode\": \"DEF456\",\n>       \"owner\": {\n>         \"name\": \"Bob\",\n>         \"email\": \"bob@example.com\"\n>       }\n>       ...\n>     }\n>   ]\n> }\n> ```\n> </details>\n> </details>\n\n<br>\n\n> <details>\n> <summary style=\"font-size:18pt;\">💬 How is the param <code>UPDATED_DATE_UTC</code> updated in the `/reports/order-items` endpoint?</summary>\n> <br>\n> Please note that not all fields in the returned JSON are eligible to update the value of <code>UPDATED_DATE_UTC</code>. Only fields directly related to the purchase and order items themselves will trigger a change in this value.\n> </details>\n\n\nContact Support:\n Name: Support\n Email: data-support@feverup.com",
+      "type": "text/plain"
+    }
+  }
+}

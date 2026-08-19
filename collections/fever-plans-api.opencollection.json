@@ -1,0 +1,86 @@
+{
+  "opencollection": "1.0.0",
+  "info": {
+    "name": "Fever - Reporting Authentication Plans API",
+    "version": "1.5.0"
+  },
+  "items": [
+    {
+      "info": {
+        "name": "Plans",
+        "type": "folder"
+      },
+      "items": [
+        {
+          "info": {
+            "name": "Request plans",
+            "type": "http"
+          },
+          "http": {
+            "method": "POST",
+            "url": "/v1/plans/search",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "body": {
+              "type": "json",
+              "data": "{}"
+            },
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Create a request to get plans. The field plan_ids can be used to filter the plans by id.If empty, all plans will be returned.The search will be processed asynchronously, being able to fetch the result from the provided search ID."
+        },
+        {
+          "info": {
+            "name": "Get plans",
+            "type": "http"
+          },
+          "http": {
+            "method": "GET",
+            "url": "/v1/plans/search/:search_id",
+            "headers": [
+              {
+                "name": "user-id-to-impersonate",
+                "value": ""
+              }
+            ],
+            "params": [
+              {
+                "name": "search_id",
+                "value": "",
+                "type": "path"
+              },
+              {
+                "name": "page",
+                "value": "",
+                "type": "query"
+              }
+            ],
+            "auth": {
+              "type": "oauth2",
+              "flow": "resource_owner_password_credentials",
+              "accessTokenUrl": "/v1/auth/token",
+              "credentials": {
+                "clientId": "{{clientId}}",
+                "clientSecret": "{{clientSecret}}"
+              }
+            }
+          },
+          "docs": "Get plans from a search_id."
+        }
+      ]
+    }
+  ],
+  "bundled": true
+}

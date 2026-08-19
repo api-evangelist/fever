@@ -6,11 +6,9 @@ server:
   name: fever
   transport: http
   url: https://data-search.apigw.feverup.com/mcp/
-  description: >-
-    Official Fever MCP server exposing Fever's global live-entertainment event
-    catalog to MCP-compatible clients (Claude Desktop, Cursor, Windsurf, Claude
-    Code). Data is real-time, updated at the same rate as the Fever platform.
-    No registration form is needed; currently free to use.
+  description: Official Fever MCP server exposing Fever's global live-entertainment event catalog to MCP-compatible
+    clients (Claude Desktop, Cursor, Windsurf, Claude Code). Data is real-time, updated at the same rate
+    as the Fever platform. No registration form is needed; currently free to use.
 authentication:
   type: oauth2
   flow: authorization_code
@@ -22,24 +20,26 @@ authentication:
   registration_endpoint: https://data-search.apigw.feverup.com/register
   scopes_supported:
   - openid
-  note: >-
-    The MCP client opens a browser window to log in on first use via OAuth 2.0;
-    subsequent requests are handled automatically.
+  note: The MCP client opens a browser window to log in on first use via OAuth 2.0; subsequent requests
+    are handled automatically.
 client_config:
   claude_desktop:
     mcpServers:
       fever:
         url: https://data-search.apigw.feverup.com/mcp/
-rate_limits: >-
-  Rate limits apply to ensure fair usage. For higher limits contact
-  data-ai@feverup.com.
+rate_limits: Rate limits apply to ensure fair usage. For higher limits contact data-ai@feverup.com.
 tools:
 - name: search_events
-  description: >-
-    Discover events, activities and experiences. Search by city code,
-    coordinates, date range and keywords, with sorting and pagination.
+  description: Discover events, activities and experiences. Search by city code, coordinates, date range
+    and keywords, with sorting and pagination.
 - name: search_cities
-  description: >-
-    Find cities where Fever operates, enabling market discovery and city-code
-    lookup for use with search_events.
+  description: Find cities where Fever operates, enabling market discovery and city-code lookup for use
+    with search_events.
 contact: data-ai@feverup.com
+deployment:
+  mode: remote
+  endpoint: https://data-search.apigw.feverup.com/mcp/
+  verified: probed
+  probe: gated
+  checked: '2026-08-12'
+  source: catalog MCP census
