@@ -1,11 +1,7 @@
 {
   "provider": "fever",
   "sources": [
-    "fever-authentication-api-openapi.yml",
-    "fever-feverzone-api-openapi.yml",
-    "fever-order-items-api-openapi.yml",
-    "fever-plans-api-openapi.yml",
-    "fever-sessions-api-openapi.yml"
+    "_original/fever-reporting-api-openapi-original.json"
   ],
   "outputs": [
     "fever-authentication-api-openapi.yml",
@@ -17,6 +13,16 @@
   "archived": [],
   "errors": [],
   "warnings": [],
-  "notes": [],
-  "skipped": []
+  "notes": [
+    "sourced from openapi/_original/ (1 archived document(s)); previously refined output at the top level was skipped rather than re-split",
+    "fever-reporting-api-openapi-original.json: upgraded openapi 3.0.0 -> OpenAPI 3.2.0",
+    "apis.yml register: already-registered"
+  ],
+  "skipped": [
+    "fever-authentication-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "fever-feverzone-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "fever-order-items-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "fever-plans-api-openapi.yml: previously refined output, superseded by openapi/_original/",
+    "fever-sessions-api-openapi.yml: previously refined output, superseded by openapi/_original/"
+  ]
 }
