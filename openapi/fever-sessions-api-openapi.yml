@@ -280,27 +280,24 @@ paths:
         label: Python
 components:
   schemas:
-    ValidationError:
+    SearchStatus:
       properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
+        message:
           type: string
           title: Message
-        type:
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
           type: string
-          title: Error Type
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
       type: object
       required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
+      - message
+      - search_id
+      title: SearchStatus
     Search_SessionDimension_SessionsParams_-Input:
       properties:
         partition_info:
@@ -326,15 +323,63 @@ components:
       required:
       - data
       title: Search[SessionDimension, SessionsParams]
-    HTTPValidationError:
+    Search_SessionDimension_SessionsParams_-Output:
       properties:
-        detail:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SessionsParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
           items:
-            $ref: '#/components/schemas/ValidationError'
+            $ref: '#/components/schemas/SessionDimension'
           type: array
-          title: Detail
+          title: Data
+          description: Data rows
       type: object
-      title: HTTPValidationError
+      required:
+      - data
+      title: Search[SessionDimension, SessionsParams]
+    Venue:
+      properties:
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+          description: Venue city
+          example: New York
+        country:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country
+          description: Venue country
+          example: USA
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Venue name
+          example: Madison Square Garden
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+          description: Venue timezone
+          example: America/New_York
+      type: object
+      title: Venue
     SessionDimension:
       properties:
         id:
@@ -495,24 +540,6 @@ components:
       - id
       - session_type_id
       title: SessionDimension
-    SearchStatus:
-      properties:
-        message:
-          type: string
-          title: Message
-          description: Message about the search status
-          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
-        search_id:
-          type: string
-          format: uuid
-          title: Search Id
-          description: The search ID
-          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
-      type: object
-      required:
-      - message
-      - search_id
-      title: SearchStatus
     SessionsParams:
       properties:
         session_ids:
@@ -562,63 +589,36 @@ components:
       additionalProperties: false
       type: object
       title: SessionsParams
-    Search_SessionDimension_SessionsParams_-Output:
+    ValidationError:
       properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SessionsParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
+        loc:
           items:
-            $ref: '#/components/schemas/SessionDimension'
+            anyOf:
+            - type: string
+            - type: integer
           type: array
-          title: Data
-          description: Data rows
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
       type: object
       required:
-      - data
-      title: Search[SessionDimension, SessionsParams]
-    Venue:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    HTTPValidationError:
       properties:
-        city:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: City
-          description: Venue city
-          example: New York
-        country:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Country
-          description: Venue country
-          example: USA
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Venue name
-          example: Madison Square Garden
-        timezone:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Timezone
-          description: Venue timezone
-          example: America/New_York
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
       type: object
-      title: Venue
+      title: HTTPValidationError
     PartitionInfo:
       properties:
         partition_num:

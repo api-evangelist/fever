@@ -282,7 +282,85 @@ paths:
         label: Python
 components:
   schemas:
-    PlanDimension-Output:
+    GalleryResource:
+      properties:
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+          description: Gallery resource URL
+          example: https://www.example.com/image.jpg
+        type:
+          $ref: '#/components/schemas/GalleryResourceType'
+          description: Gallery resource type (image or video)
+          example: image
+      type: object
+      required:
+      - type
+      title: GalleryResource
+    Search_PlanDimension_PlansParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/PlansParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/PlanDimension-Output'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[PlanDimension, PlansParams]
+    SearchStatus:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
+          type: string
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
+      type: object
+      required:
+      - message
+      - search_id
+      title: SearchStatus
+    Taxonomy:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Taxonomy ID
+          example: 1234
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Taxonomy name
+          example: Taxonomy name
+      type: object
+      required:
+      - id
+      title: Taxonomy
+    PlanDimension-Input:
       properties:
         id:
           type: integer
@@ -383,127 +461,79 @@ components:
       - partner_id
       - partner_name
       title: PlanDimension
-    ValidationError:
+    Venue:
       properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
-          type: string
-          title: Message
-        type:
-          type: string
-          title: Error Type
-      type: object
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
-    Search_PlanDimension_PlansParams_-Input:
-      properties:
-        partition_info:
+        city:
           anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
+          - type: string
           - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
+          title: City
+          description: Venue city
+          example: New York
+        country:
           anyOf:
-          - $ref: '#/components/schemas/PlansParams'
+          - type: string
           - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/PlanDimension-Input'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[PlanDimension, PlansParams]
-    PlansParams:
-      properties:
-        plan_ids:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-            maxItems: 1000
-          - type: 'null'
-          title: Plan Ids
-          description: List of ids of the plans to filter by.
-          default: []
-          examples:
-          - []
-          - - 123
-          - - 123
-            - 456
-      additionalProperties: false
-      type: object
-      title: PlansParams
-    Taxonomy:
-      properties:
-        id:
-          type: integer
-          title: Id
-          description: Taxonomy ID
-          example: 1234
+          title: Country
+          description: Venue country
+          example: USA
         name:
           anyOf:
           - type: string
           - type: 'null'
           title: Name
-          description: Taxonomy name
-          example: Taxonomy name
+          description: Venue name
+          example: Madison Square Garden
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+          description: Venue timezone
+          example: America/New_York
+      type: object
+      title: Venue
+    PartitionInfo:
+      properties:
+        partition_num:
+          type: integer
+          minimum: 0.0
+          title: Partition Num
+          description: Partition number
+          example: 0
+        endpoint:
+          type: string
+          title: Endpoint
+          description: Endpoint to fetch data for partition
+          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        size:
+          type: integer
+          minimum: 0.0
+          title: Size
+          description: Partition size in bytes
+          example: 15058
+        rows:
+          type: integer
+          minimum: 0.0
+          title: Rows
+          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
+          example: 4099
       type: object
       required:
-      - id
-      title: Taxonomy
-    Currency:
-      type: string
-      enum:
-      - AED
-      - ARS
-      - AUD
-      - BGN
-      - BRL
-      - CAD
-      - CHF
-      - CLP
-      - COP
-      - CRC
-      - CZK
-      - DKK
-      - EUR
-      - GBP
-      - HKD
-      - HUF
-      - INR
-      - JPY
-      - KRW
-      - MAD
-      - MXN
-      - MYR
-      - NOK
-      - NZD
-      - PLN
-      - QAR
-      - RON
-      - RUB
-      - SAR
-      - SEK
-      - SGD
-      - USD
-      - ZAR
-      title: Currency
+      - partition_num
+      - endpoint
+      - size
+      - rows
+      title: PartitionInfo
+      examples:
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        partition_num: 0
+        rows: 4099
+        size: 15058
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
+        partition_num: 1
+        rows: 3145
+        size: 11260
     SessionDimension:
       properties:
         id:
@@ -664,23 +694,95 @@ components:
       - id
       - session_type_id
       title: SessionDimension
-    GalleryResource:
+    Currency:
+      type: string
+      enum:
+      - AED
+      - ARS
+      - AUD
+      - BGN
+      - BRL
+      - CAD
+      - CHF
+      - CLP
+      - COP
+      - CRC
+      - CZK
+      - DKK
+      - EUR
+      - GBP
+      - HKD
+      - HUF
+      - INR
+      - JPY
+      - KRW
+      - MAD
+      - MXN
+      - MYR
+      - NOK
+      - NZD
+      - PLN
+      - QAR
+      - RON
+      - RUB
+      - SAR
+      - SEK
+      - SGD
+      - USD
+      - ZAR
+      title: Currency
+    ValidationError:
       properties:
-        url:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    ExternalProvider:
+      properties:
+        name:
           anyOf:
           - type: string
           - type: 'null'
-          title: Url
-          description: Gallery resource URL
-          example: https://www.example.com/image.jpg
-        type:
-          $ref: '#/components/schemas/GalleryResourceType'
-          description: Gallery resource type (image or video)
-          example: image
+          title: Name
+          description: External provider name
+          example: external_provider
+        plan_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Plan Id
+          description: External provider plan ID
+          example: 1234
+        session_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Session Id
+          description: External provider session ID
+          example: 1234
       type: object
-      required:
-      - type
-      title: GalleryResource
+      title: ExternalProvider
+    GalleryResourceType:
+      type: string
+      enum:
+      - image
+      - video
+      title: GalleryResourceType
     HTTPValidationError:
       properties:
         detail:
@@ -690,88 +792,7 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
-    SearchStatus:
-      properties:
-        message:
-          type: string
-          title: Message
-          description: Message about the search status
-          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
-        search_id:
-          type: string
-          format: uuid
-          title: Search Id
-          description: The search ID
-          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
-      type: object
-      required:
-      - message
-      - search_id
-      title: SearchStatus
-    Search_PlanDimension_PlansParams_-Output:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/PlansParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/PlanDimension-Output'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[PlanDimension, PlansParams]
-    GalleryResourceType:
-      type: string
-      enum:
-      - image
-      - video
-      title: GalleryResourceType
-    Venue:
-      properties:
-        city:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: City
-          description: Venue city
-          example: New York
-        country:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Country
-          description: Venue country
-          example: USA
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Venue name
-          example: Madison Square Garden
-        timezone:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Timezone
-          description: Venue timezone
-          example: America/New_York
-      type: object
-      title: Venue
-    PlanDimension-Input:
+    PlanDimension-Output:
       properties:
         id:
           type: integer
@@ -872,72 +893,51 @@ components:
       - partner_id
       - partner_name
       title: PlanDimension
-    PartitionInfo:
+    PlansParams:
       properties:
-        partition_num:
-          type: integer
-          minimum: 0.0
-          title: Partition Num
-          description: Partition number
-          example: 0
-        endpoint:
-          type: string
-          title: Endpoint
-          description: Endpoint to fetch data for partition
-          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
-        size:
-          type: integer
-          minimum: 0.0
-          title: Size
-          description: Partition size in bytes
-          example: 15058
-        rows:
-          type: integer
-          minimum: 0.0
-          title: Rows
-          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
-          example: 4099
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+      additionalProperties: false
+      type: object
+      title: PlansParams
+    Search_PlanDimension_PlansParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/PlansParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/PlanDimension-Input'
+          type: array
+          title: Data
+          description: Data rows
       type: object
       required:
-      - partition_num
-      - endpoint
-      - size
-      - rows
-      title: PartitionInfo
-      examples:
-      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
-        partition_num: 0
-        rows: 4099
-        size: 15058
-      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
-        partition_num: 1
-        rows: 3145
-        size: 11260
-    ExternalProvider:
-      properties:
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: External provider name
-          example: external_provider
-        plan_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Plan Id
-          description: External provider plan ID
-          example: 1234
-        session_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Session Id
-          description: External provider session ID
-          example: 1234
-      type: object
-      title: ExternalProvider
+      - data
+      title: Search[PlanDimension, PlansParams]
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2
