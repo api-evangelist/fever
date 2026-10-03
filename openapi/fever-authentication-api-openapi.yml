@@ -56,6 +56,30 @@ paths:
         label: Python
 components:
   schemas:
+    Body_create_token_auth_token_post:
+      properties:
+        username:
+          type: string
+          title: Username
+        password:
+          type: string
+          format: password
+          title: Password
+          writeOnly: true
+      type: object
+      required:
+      - username
+      - password
+      title: Body_create_token_auth_token_post
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
     ValidationError:
       properties:
         loc:
@@ -77,15 +101,6 @@ components:
       - msg
       - type
       title: ValidationError
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
     Token:
       properties:
         access_token:
@@ -103,21 +118,6 @@ components:
       - access_token
       - token_type
       title: Token
-    Body_create_token_auth_token_post:
-      properties:
-        username:
-          type: string
-          title: Username
-        password:
-          type: string
-          format: password
-          title: Password
-          writeOnly: true
-      type: object
-      required:
-      - username
-      - password
-      title: Body_create_token_auth_token_post
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2
