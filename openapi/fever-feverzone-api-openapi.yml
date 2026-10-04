@@ -834,6 +834,175 @@ paths:
         label: Python
 components:
   schemas:
+    PartitionInfo:
+      properties:
+        partition_num:
+          type: integer
+          minimum: 0.0
+          title: Partition Num
+          description: Partition number
+          example: 0
+        endpoint:
+          type: string
+          title: Endpoint
+          description: Endpoint to fetch data for partition
+          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        size:
+          type: integer
+          minimum: 0.0
+          title: Size
+          description: Partition size in bytes
+          example: 15058
+        rows:
+          type: integer
+          minimum: 0.0
+          title: Rows
+          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
+          example: 4099
+      type: object
+      required:
+      - partition_num
+      - endpoint
+      - size
+      - rows
+      title: PartitionInfo
+      examples:
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        partition_num: 0
+        rows: 4099
+        size: 15058
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
+        partition_num: 1
+        rows: 3145
+        size: 11260
+    SalesSummary:
+      properties:
+        tickets_sold:
+          type: integer
+          title: Tickets Sold
+          description: Number of tickets sold
+        addons_sold:
+          type: integer
+          title: Addons Sold
+          description: Number of addons sold
+        ticket_invitations:
+          type: integer
+          title: Ticket Invitations
+          description: Number of ticket invitations
+        addon_invitations:
+          type: integer
+          title: Addon Invitations
+          description: Number of addons invitations
+        total_gross_revenue:
+          type: number
+          title: Total Gross Revenue
+          description: Total gross revenue
+        ticket_gross_revenue:
+          type: number
+          title: Ticket Gross Revenue
+          description: Ticket gross revenue
+        addon_gross_revenue:
+          type: number
+          title: Addon Gross Revenue
+          description: Addons gross revenue
+        surcharge:
+          type: number
+          title: Surcharge
+          description: Surcharge
+        ticket_surcharge:
+          type: number
+          title: Ticket Surcharge
+          description: Tickets surcharge
+        addon_surcharge:
+          type: number
+          title: Addon Surcharge
+          description: Addons surcharge
+        discount:
+          type: number
+          title: Discount
+          description: Discount
+        user_payment:
+          type: number
+          title: User Payment
+          description: User payment
+        currency:
+          $ref: '#/components/schemas/Currency'
+          description: Report currency
+          example: USD
+        orders:
+          type: integer
+          title: Orders
+          description: Number of orders
+      type: object
+      required:
+      - tickets_sold
+      - addons_sold
+      - ticket_invitations
+      - addon_invitations
+      - total_gross_revenue
+      - ticket_gross_revenue
+      - addon_gross_revenue
+      - surcharge
+      - ticket_surcharge
+      - addon_surcharge
+      - discount
+      - user_payment
+      - orders
+      title: SalesSummary
+    SalesByTicketTypeParams:
+      properties:
+        currency:
+          anyOf:
+          - $ref: '#/components/schemas/Currency'
+          - type: 'null'
+          description: Currency code to convert the sales data. If not provided, the data will be returned in the currency of the venue. However, it is mandatory if there are several currencies in the plans.
+          example: USD
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        event_start_date_local_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Local From
+          description: Local start date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        event_start_date_local_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Event Start Date Local To
+          description: Local end date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+        purchase_date_local_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local From
+          description: Local start date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        purchase_date_local_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local To
+          description: Local end date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+      additionalProperties: false
+      type: object
+      title: SalesByTicketTypeParams
     Search_SalesByTicketType_SalesByTicketTypeParams_-Input:
       properties:
         partition_info:
@@ -859,31 +1028,6 @@ components:
       required:
       - data
       title: Search[SalesByTicketType, SalesByTicketTypeParams]
-    Search_SalesSummary_SalesSummaryParams_-Input:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SalesSummaryParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/SalesSummary'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[SalesSummary, SalesSummaryParams]
     SalesByResellerParams:
       properties:
         reseller_ids:
@@ -916,6 +1060,93 @@ components:
       additionalProperties: false
       type: object
       title: SalesByResellerParams
+    Currency:
+      type: string
+      enum:
+      - AED
+      - ARS
+      - AUD
+      - BGN
+      - BRL
+      - CAD
+      - CHF
+      - CLP
+      - COP
+      - CRC
+      - CZK
+      - DKK
+      - EUR
+      - GBP
+      - HKD
+      - HUF
+      - INR
+      - JPY
+      - KRW
+      - MAD
+      - MXN
+      - MYR
+      - NOK
+      - NZD
+      - PLN
+      - QAR
+      - RON
+      - RUB
+      - SAR
+      - SEK
+      - SGD
+      - USD
+      - ZAR
+      title: Currency
+    Search_SalesSummary_SalesSummaryParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesSummaryParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesSummary'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesSummary, SalesSummaryParams]
+    Search_SalesByTicketType_SalesByTicketTypeParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesByTicketTypeParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesByTicketType'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesByTicketType, SalesByTicketTypeParams]
     Search_SalesByReseller_SalesByResellerParams_-Output:
       properties:
         partition_info:
@@ -941,40 +1172,60 @@ components:
       required:
       - data
       title: Search[SalesByReseller, SalesByResellerParams]
-    SalesByReseller:
+    SalesSummaryParams:
       properties:
-        ticket_type:
+        currency:
+          anyOf:
+          - $ref: '#/components/schemas/Currency'
+          - type: 'null'
+          description: Currency code to convert the sales data. If not provided, the data will be returned in the currency of the venue. However, it is mandatory if there are several currencies in the plans.
+          example: USD
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        event_start_date_local_from:
           anyOf:
           - type: string
           - type: 'null'
-          title: Ticket Type
-          description: Ticket type
-          example: Ticket type
-        tickets_sold:
-          type: integer
-          title: Tickets Sold
-          description: Venue tickets sold
-          example: 1000
-        gross_revenue:
-          type: number
-          title: Gross Revenue
-          description: Venue gross revenue
-          example: 10000
-        reseller:
-          $ref: '#/components/schemas/Reseller'
-        venue_name:
+          title: Event Start Date Local From
+          description: Local start date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        event_start_date_local_to:
           anyOf:
           - type: string
           - type: 'null'
-          title: Venue Name
-          description: Venue name
-          example: Venue name
+          title: Event Start Date Local To
+          description: Local end date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+        purchase_date_local_from:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local From
+          description: Local start date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-01 00:00
+        purchase_date_local_to:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Date Local To
+          description: Local end date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-31 00:00
+      additionalProperties: false
       type: object
-      required:
-      - tickets_sold
-      - gross_revenue
-      - reseller
-      title: SalesByReseller
+      title: SalesSummaryParams
     ValidationError:
       properties:
         loc:
@@ -1070,6 +1321,83 @@ components:
       - discount
       - user_payment
       title: SalesByTicketType
+    Search_SalesSummary_SalesSummaryParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SalesSummaryParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SalesSummary'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SalesSummary, SalesSummaryParams]
+    SalesByReseller:
+      properties:
+        ticket_type:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Ticket Type
+          description: Ticket type
+          example: Ticket type
+        tickets_sold:
+          type: integer
+          title: Tickets Sold
+          description: Venue tickets sold
+          example: 1000
+        gross_revenue:
+          type: number
+          title: Gross Revenue
+          description: Venue gross revenue
+          example: 10000
+        reseller:
+          $ref: '#/components/schemas/Reseller'
+        venue_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Venue Name
+          description: Venue name
+          example: Venue name
+      type: object
+      required:
+      - tickets_sold
+      - gross_revenue
+      - reseller
+      title: SalesByReseller
+    SearchStatus:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
+          type: string
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
+      type: object
+      required:
+      - message
+      - search_id
+      title: SearchStatus
     Search_SalesByReseller_SalesByResellerParams_-Input:
       properties:
         partition_info:
@@ -1095,43 +1423,21 @@ components:
       required:
       - data
       title: Search[SalesByReseller, SalesByResellerParams]
-    Currency:
+    ResellerGroupByDimension:
       type: string
       enum:
-      - AED
-      - ARS
-      - AUD
-      - BGN
-      - BRL
-      - CAD
-      - CHF
-      - CLP
-      - COP
-      - CRC
-      - CZK
-      - DKK
-      - EUR
-      - GBP
-      - HKD
-      - HUF
-      - INR
-      - JPY
-      - KRW
-      - MAD
-      - MXN
-      - MYR
-      - NOK
-      - NZD
-      - PLN
-      - QAR
-      - RON
-      - RUB
-      - SAR
-      - SEK
-      - SGD
-      - USD
-      - ZAR
-      title: Currency
+      - TICKET_TYPE
+      - VENUE
+      title: ResellerGroupByDimension
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
     Reseller:
       properties:
         id:
@@ -1173,312 +1479,6 @@ components:
       - contact_language
       - accepts_comms
       title: Reseller
-    SalesSummaryParams:
-      properties:
-        currency:
-          anyOf:
-          - $ref: '#/components/schemas/Currency'
-          - type: 'null'
-          description: Currency code to convert the sales data. If not provided, the data will be returned in the currency of the venue. However, it is mandatory if there are several currencies in the plans.
-          example: USD
-        plan_ids:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-            maxItems: 1000
-          - type: 'null'
-          title: Plan Ids
-          description: List of ids of the plans to filter by.
-          default: []
-          examples:
-          - []
-          - - 123
-          - - 123
-            - 456
-        event_start_date_local_from:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Event Start Date Local From
-          description: Local start date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-01 00:00
-        event_start_date_local_to:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Event Start Date Local To
-          description: Local end date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-31 00:00
-        purchase_date_local_from:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Purchase Date Local From
-          description: Local start date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-01 00:00
-        purchase_date_local_to:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Purchase Date Local To
-          description: Local end date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-31 00:00
-      additionalProperties: false
-      type: object
-      title: SalesSummaryParams
-    Search_SalesByTicketType_SalesByTicketTypeParams_-Output:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SalesByTicketTypeParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/SalesByTicketType'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[SalesByTicketType, SalesByTicketTypeParams]
-    ResellerGroupByDimension:
-      type: string
-      enum:
-      - TICKET_TYPE
-      - VENUE
-      title: ResellerGroupByDimension
-    SalesByTicketTypeParams:
-      properties:
-        currency:
-          anyOf:
-          - $ref: '#/components/schemas/Currency'
-          - type: 'null'
-          description: Currency code to convert the sales data. If not provided, the data will be returned in the currency of the venue. However, it is mandatory if there are several currencies in the plans.
-          example: USD
-        plan_ids:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-            maxItems: 1000
-          - type: 'null'
-          title: Plan Ids
-          description: List of ids of the plans to filter by.
-          default: []
-          examples:
-          - []
-          - - 123
-          - - 123
-            - 456
-        event_start_date_local_from:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Event Start Date Local From
-          description: Local start date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-01 00:00
-        event_start_date_local_to:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Event Start Date Local To
-          description: Local end date for the event start date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-31 00:00
-        purchase_date_local_from:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Purchase Date Local From
-          description: Local start date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-01 00:00
-        purchase_date_local_to:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Purchase Date Local To
-          description: Local end date for the purchase date filter. The timezone corresponds to the venue timezone where the event takes place. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-31 00:00
-      additionalProperties: false
-      type: object
-      title: SalesByTicketTypeParams
-    SearchStatus:
-      properties:
-        message:
-          type: string
-          title: Message
-          description: Message about the search status
-          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
-        search_id:
-          type: string
-          format: uuid
-          title: Search Id
-          description: The search ID
-          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
-      type: object
-      required:
-      - message
-      - search_id
-      title: SearchStatus
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    Search_SalesSummary_SalesSummaryParams_-Output:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SalesSummaryParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/SalesSummary'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[SalesSummary, SalesSummaryParams]
-    SalesSummary:
-      properties:
-        tickets_sold:
-          type: integer
-          title: Tickets Sold
-          description: Number of tickets sold
-        addons_sold:
-          type: integer
-          title: Addons Sold
-          description: Number of addons sold
-        ticket_invitations:
-          type: integer
-          title: Ticket Invitations
-          description: Number of ticket invitations
-        addon_invitations:
-          type: integer
-          title: Addon Invitations
-          description: Number of addons invitations
-        total_gross_revenue:
-          type: number
-          title: Total Gross Revenue
-          description: Total gross revenue
-        ticket_gross_revenue:
-          type: number
-          title: Ticket Gross Revenue
-          description: Ticket gross revenue
-        addon_gross_revenue:
-          type: number
-          title: Addon Gross Revenue
-          description: Addons gross revenue
-        surcharge:
-          type: number
-          title: Surcharge
-          description: Surcharge
-        ticket_surcharge:
-          type: number
-          title: Ticket Surcharge
-          description: Tickets surcharge
-        addon_surcharge:
-          type: number
-          title: Addon Surcharge
-          description: Addons surcharge
-        discount:
-          type: number
-          title: Discount
-          description: Discount
-        user_payment:
-          type: number
-          title: User Payment
-          description: User payment
-        currency:
-          $ref: '#/components/schemas/Currency'
-          description: Report currency
-          example: USD
-        orders:
-          type: integer
-          title: Orders
-          description: Number of orders
-      type: object
-      required:
-      - tickets_sold
-      - addons_sold
-      - ticket_invitations
-      - addon_invitations
-      - total_gross_revenue
-      - ticket_gross_revenue
-      - addon_gross_revenue
-      - surcharge
-      - ticket_surcharge
-      - addon_surcharge
-      - discount
-      - user_payment
-      - orders
-      title: SalesSummary
-    PartitionInfo:
-      properties:
-        partition_num:
-          type: integer
-          minimum: 0.0
-          title: Partition Num
-          description: Partition number
-          example: 0
-        endpoint:
-          type: string
-          title: Endpoint
-          description: Endpoint to fetch data for partition
-          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
-        size:
-          type: integer
-          minimum: 0.0
-          title: Size
-          description: Partition size in bytes
-          example: 15058
-        rows:
-          type: integer
-          minimum: 0.0
-          title: Rows
-          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
-          example: 4099
-      type: object
-      required:
-      - partition_num
-      - endpoint
-      - size
-      - rows
-      title: PartitionInfo
-      examples:
-      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
-        partition_num: 0
-        rows: 4099
-        size: 15058
-      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
-        partition_num: 1
-        rows: 3145
-        size: 11260
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2

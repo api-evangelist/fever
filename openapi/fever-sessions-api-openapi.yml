@@ -280,6 +280,59 @@ paths:
         label: Python
 components:
   schemas:
+    Venue:
+      properties:
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+          description: Venue city
+          example: New York
+        country:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country
+          description: Venue country
+          example: USA
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Venue name
+          example: Madison Square Garden
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+          description: Venue timezone
+          example: America/New_York
+      type: object
+      title: Venue
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
     SessionDimension:
       properties:
         id:
@@ -440,118 +493,6 @@ components:
       - id
       - session_type_id
       title: SessionDimension
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    Search_SessionDimension_SessionsParams_-Output:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SessionsParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/SessionDimension'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[SessionDimension, SessionsParams]
-    ValidationError:
-      properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
-          type: string
-          title: Message
-        type:
-          type: string
-          title: Error Type
-      type: object
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
-    Search_SessionDimension_SessionsParams_-Input:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SessionsParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/SessionDimension'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[SessionDimension, SessionsParams]
-    Venue:
-      properties:
-        city:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: City
-          description: Venue city
-          example: New York
-        country:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Country
-          description: Venue country
-          example: USA
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Venue name
-          example: Madison Square Garden
-        timezone:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Timezone
-          description: Venue timezone
-          example: America/New_York
-      type: object
-      title: Venue
     PartitionInfo:
       properties:
         partition_num:
@@ -593,6 +534,31 @@ components:
         partition_num: 1
         rows: 3145
         size: 11260
+    Search_SessionDimension_SessionsParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SessionsParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SessionDimension'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SessionDimension, SessionsParams]
     SessionsParams:
       properties:
         session_ids:
@@ -642,6 +608,15 @@ components:
       additionalProperties: false
       type: object
       title: SessionsParams
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
     SearchStatus:
       properties:
         message:
@@ -660,6 +635,31 @@ components:
       - message
       - search_id
       title: SearchStatus
+    Search_SessionDimension_SessionsParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SessionsParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SessionDimension'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SessionDimension, SessionsParams]
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2

@@ -303,52 +303,6 @@ paths:
         label: Python
 components:
   schemas:
-    UTM:
-      properties:
-        campaign:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Campaign
-          description: UTM campaign name
-          example: summer_sale
-        content:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Content
-          description: UTM content
-          example: banner_ad
-        medium:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Medium
-          description: UTM medium
-          example: cpc
-        source:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Source
-          description: UTM source
-          example: google
-        term:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Term
-          description: UTM term
-          example: running+shoes
-        referring_domain:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Referring Domain
-          description: UTM term
-          example: https://google.com
-      type: object
-      title: UTM
     Owner:
       properties:
         id:
@@ -402,410 +356,78 @@ components:
       required:
       - id
       title: Owner
-    PurchaseLocation:
-      properties:
-        id_geo_name:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Id Geo Name
-          description: ID of the geo name from where the purchase was made. This field is inferred so it might not be accurate. More information at https://www.geonames.org/about.html
-          example: 123456
-        city_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: City Name
-          description: City from where the purchase was made. This field is inferred so it might not be accurate.
-          example: Sunnyvale
-        country_code:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Country Code
-          description: Country code from where the purchase was made. This field is inferred so it might not be accurate.
-          example: US
-        region_code:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Region Code
-          description: Region code from where the purchase was made. This field is inferred so it might not be accurate.
-          example: CA
-        postal_code:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Postal Code
-          description: Postal code from where the purchase was made. This field is inferred so it might not be accurate.
-          example: '94043'
-        quality:
-          anyOf:
-          - $ref: '#/components/schemas/PurchaseLocationQuality'
-          - type: 'null'
-          description: Quality of the purchase location. Its value depends on the source it was inferred from.
-          examples:
-          - MEDIUM
-          - HIGH
-      type: object
-      title: PurchaseLocation
-    AssignedSeat:
-      properties:
-        id:
-          type: integer
-          title: Id
-          description: Booking question ID
-          example: 123456
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Assigned seat name
-          example: Level 2 - Row F - Seat 227
-        seating_provider:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Seating Provider
-          description: Seating provider
-          example: seats-io
-        seating_provider_seat_reference:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Seating Provider Seat Reference
-          description: Seating provider seat reference
-          example: Level 2 - Row F - Seat 227
-      type: object
-      required:
-      - id
-      title: AssignedSeat
-    ValidationError:
-      properties:
-        loc:
-          items:
-            anyOf:
-            - type: string
-            - type: integer
-          type: array
-          title: Location
-        msg:
-          type: string
-          title: Message
-        type:
-          type: string
-          title: Error Type
-      type: object
-      required:
-      - loc
-      - msg
-      - type
-      title: ValidationError
-    GalleryResource:
-      properties:
-        url:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Url
-          description: Gallery resource URL
-          example: https://www.example.com/image.jpg
-        type:
-          $ref: '#/components/schemas/GalleryResourceType'
-          description: Gallery resource type (image or video)
-          example: image
-      type: object
-      required:
-      - type
-      title: GalleryResource
-    BookedSlotAsset:
+    GalleryResourceType:
+      type: string
+      enum:
+      - image
+      - video
+      title: GalleryResourceType
+    PaymentDetail:
       properties:
         id:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
           title: Id
-          description: Asset ID (e.g. an Escape This room)
-          example: 3473
-        name:
+          description: Transaction ID issued by the payment processor (Braintree, Stripe, ...)
+          example: tx_abc123
+        card_brand:
           anyOf:
           - type: string
           - type: 'null'
-          title: Name
-          description: Asset name
-          example: NB - Asylum
-        description:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Description
-          description: Asset description
-        availability_strategy:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Availability Strategy
-          description: Capacity strategy used by the asset (BY_PARTY_COUNT or BY_PEOPLE_COUNT)
-          example: BY_PARTY_COUNT
-        max_party_size:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Max Party Size
-          description: Maximum number of people allowed in a single party
-          example: 4
-        min_party_size:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Min Party Size
-          description: Minimum number of people required to book a party
-          example: 1
-        max_num_parties:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Max Num Parties
-          description: Maximum number of independent parties the asset can host
-          example: 1
-        partner_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Partner Id
-          description: Partner that owns the asset
-          example: 190
-        asset_type_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Asset Type Id
-          description: Asset type ID
-          example: 7
-        is_manual_assignment_confirmation_required:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Is Manual Assignment Confirmation Required
-          description: Whether the asset requires manual assignment confirmation
-          example: false
-      type: object
-      title: BookedSlotAsset
-    BookedSlotActivity:
-      properties:
-        id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Id
-          description: Activity ID
-          example: 481
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Activity name
-          example: Escape Room Northbridge
-      type: object
-      title: BookedSlotActivity
-    Order-Output:
-      properties:
-        id:
-          type: integer
-          title: Id
-          description: Unique order ID. This code groups all tickets bought in the same transaction.
-          example: 123456
-        parent_order_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Parent Order Id
-          description: If the order comes from a reschedule, the original order ID.
-          example: 11234
-        buyer:
-          anyOf:
-          - $ref: '#/components/schemas/Buyer'
-          - type: 'null'
-          description: Order buyer information
-        created_date_utc:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Created Date Utc
-          description: UTC date when the order was created
-          example: '2021-01-01 00:00:00'
-        updated_date_utc:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Updated Date Utc
-          description: UTC date when the order data was last updated. It moves whenever ANY field of the (flattened) order record changes — including nested/enrichment fields such as plan name, UTM or ratings — not only order-level fields. This is the field the `UPDATED_DATE_UTC` date filter matches against, so a search by `UPDATED_DATE_UTC` and this value are always consistent. For the order's own update time, use `order_updated_date_utc`.
-          example: '2021-01-01 00:00:00'
-        order_updated_date_utc:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Order Updated Date Utc
-          description: UTC date when the order itself was last updated (order-level fields only). Unlike `updated_date_utc`, it does not move when only nested/enrichment data (e.g. plan name) changes.
-          example: '2021-01-01 00:00:00'
-        surcharge:
-          anyOf:
-          - type: number
-          - type: 'null'
-          title: Surcharge
-          description: Surcharge applied to the order
-          example: 0.0
-        currency:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Currency
-          description: ISO3 currency of the order monetary fields
-          example: USD
-        purchase_channel:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Purchase Channel
-          description: Purchase channel where the transaction comes from
-          example: web
-        channel:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Channel
-          description: Channel slug through which this order was placed (CD_ORDER_PURCHASE_SOURCE). Join key with the `channel` field in `POST /v1/reports/channels/search`. Null when no channel is recorded on the order.
-          example: merlin-ticketmaster-uk
+          title: Card Brand
+          description: Card brand (`visa`, `mastercard`, `amex`, `discover`, ...)
+          example: visa
         payment_method:
           anyOf:
           - type: string
           - type: 'null'
           title: Payment Method
-          description: Payment method used
-          example: credit_card
-        purchase_location_source:
-          anyOf:
-          - $ref: '#/components/schemas/PurchaseLocation'
-          - type: 'null'
-          description: Purchase location information
-        billing_zip_code:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Billing Zip Code
-          description: Billing ZIP Code manually fulfilled by the customer
-          example: '28001'
-        partner:
-          anyOf:
-          - $ref: '#/components/schemas/Partner'
-          - type: 'null'
-          description: Partner information
-        plan:
-          anyOf:
-          - $ref: '#/components/schemas/Plan-Output'
-          - type: 'null'
-          description: Plan information
-        coupon:
-          anyOf:
-          - $ref: '#/components/schemas/Coupon'
-          - type: 'null'
-          description: Coupon information
-        assigned_seats:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/AssignedSeat'
-            type: array
-          - type: 'null'
-          title: Assigned Seats
-          description: List of assigned seats for the order
-        booking_questions:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/BookingQuestion'
-            type: array
-          - type: 'null'
-          title: Booking Questions
-          description: List of booking questions and answers for the order
-        business:
-          anyOf:
-          - $ref: '#/components/schemas/Business'
-          - type: 'null'
-          description: Business associated with the order
-        utm:
-          anyOf:
-          - $ref: '#/components/schemas/UTM'
-          - type: 'null'
-          description: UTM attributed to the order
-        order_items:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/OrderItem-Output'
-            type: array
-          - type: 'null'
-          title: Order Items
-          description: List of order items associated with this order
-        staff_notes:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Staff Notes
-          description: Staff notes associated with the order
-        booked_slots:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/BookedSlot'
-            type: array
-          - type: 'null'
-          title: Booked Slots
-          description: List of booked slots (assets/rooms reserved by the cart) associated with the order
-        payment_details:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PaymentDetail'
-            type: array
-          - type: 'null'
-          title: Payment Details
-          description: Card payment details for the order. Empty/null when the order was not paid by card or no card details are recorded. Same array is denormalized across every order item belonging to the same order.
-        order_group_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Order Group Id
-          description: Groups orders from cluster tickets. All orders with the same order_group_id belong to the same purchase group (e.g., bundled tickets across multiple venues).
-          example: 12345
-        is_main_group_order:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Is Main Group Order
-          description: Flag indicating whether this is the main order in a group. True for the primary order, False for secondary orders in the same group.
-          example: true
+          description: Descriptive payment method joined from the order's payment configuration
+          example: Card
+      type: object
+      title: PaymentDetail
+    PartitionInfo:
+      properties:
+        partition_num:
+          type: integer
+          minimum: 0.0
+          title: Partition Num
+          description: Partition number
+          example: 0
+        endpoint:
+          type: string
+          title: Endpoint
+          description: Endpoint to fetch data for partition
+          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        size:
+          type: integer
+          minimum: 0.0
+          title: Size
+          description: Partition size in bytes
+          example: 15058
+        rows:
+          type: integer
+          minimum: 0.0
+          title: Rows
+          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
+          example: 4099
       type: object
       required:
-      - id
-      title: Order
-    Metadata:
-      properties:
-        external_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: External Id
-          description: Partner-supplied external identifier for the order item, as sent by the partner's integration when the order was placed. Sourced from the order item's `METADATA.reporting.external_id` field on the upstream record. Useful when the partner needs to reconcile Fever order items against rows in their own system of record (e.g., box-office ticket IDs, internal SKUs). NULL when the partner did not provide one.
-          example: CJ51001B
-        external_subproduct_id:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: External Subproduct Id
-          description: Partner-supplied external subproduct identifier for the order item, used when a single plan exposes multiple distinguishable subproducts (e.g., adult vs. child ticket variants, add-ons, seating categories). Sourced from the order item's `METADATA.reporting.external_subproduct_id` field on the upstream record. NULL when the partner did not provide one or the plan has no subproducts.
-          example: ADULTO
-      type: object
-      title: Metadata
+      - partition_num
+      - endpoint
+      - size
+      - rows
+      title: PartitionInfo
+      examples:
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
+        partition_num: 0
+        rows: 4099
+        size: 15058
+      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
+        partition_num: 1
+        rows: 3145
+        size: 11260
     OrderItem-Input:
       properties:
         id:
@@ -954,117 +576,202 @@ components:
           description: Optional metadata supplied by the partner's integration when the order was placed, intended to support reconciliation against the partner's own system of record (external IDs for the order item and, when applicable, the subproduct it belongs to). Only returned when explicitly requested via `included_fields=metadata`; omitted by default to keep payloads compact for partners who don't need it. NULL when the partner did not provide any reporting metadata for the order item. See the `Metadata` schema for the full list of fields.
       type: object
       title: OrderItem
-    Pack:
+    OrderItemIncludedField:
+      type: string
+      enum:
+      - booked_slots
+      - staff_notes
+      - metadata
+      title: OrderItemIncludedField
+    Plan-Input:
       properties:
         id:
-          anyOf:
-          - type: integer
-          - type: 'null'
+          type: integer
           title: Id
-          description: Unique identifier of the order item pack
-          example: 789012
-        session_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Session Id
-          description: Unique identifier of the pack session in the catalog (matches the id returned by the Sessions endpoint). Stable across all purchases of the same pack session. Use this instead of session_name, which is not unique.
-          example: 284360344
-        session_name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Session Name
-          description: Label of the session pack
-          example: Family Package
-      type: object
-      title: Pack
-    OrderItemParams:
-      properties:
-        order_ids:
+          description: Plan ID
+          example: 1234
+        gallery:
           anyOf:
           - items:
-              type: integer
+              $ref: '#/components/schemas/GalleryResource'
             type: array
-            maxItems: 1000
           - type: 'null'
-          title: Order Ids
-          description: List of ids of the orders to filter by.
-          default: []
-          examples:
-          - []
-          - - 123
-          - - 123
-            - 456
-        plan_ids:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-            maxItems: 1000
-          - type: 'null'
-          title: Plan Ids
-          description: List of ids of the plans to filter by.
-          default: []
-          examples:
-          - []
-          - - 123
-          - - 123
-            - 456
-        date_field:
-          anyOf:
-          - type: string
-            enum:
-            - CREATED_DATE_UTC
-            - UPDATED_DATE_UTC
-            - EVENT_START_DATE_UTC
-          - type: 'null'
-          title: Date Field
-          description: Date field to filter the search
-          example: CREATED_DATE_UTC
-        date_from:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Date From
-          description: Start date for the selected date field. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-18 00:00
-        date_to:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Date To
-          description: End date for the selected date field. If hour and minute are not specified, 00:00 is added by default
-          example: 2024-12-19 00:00
-      additionalProperties: false
-      type: object
-      title: OrderItemParams
-    Business:
-      properties:
-        id:
-          anyOf:
-          - type: string
-            format: uuid
-          - type: 'null'
-          title: Id
-          description: Business ID
-          example: 7c1caabf-85cd-42ac-96db-524b15443a7b
+          title: Gallery
+          description: List of gallery resources attached to the plan
         name:
           anyOf:
           - type: string
           - type: 'null'
           title: Name
-          description: Business name
-          example: Sample City Tours
-        tax_id:
+          description: Plan name
+          example: Plan name
+        taxonomies:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/Taxonomy'
+            type: array
+          - type: 'null'
+          title: Taxonomies
+          description: List of taxonomies attached to the plan
+      type: object
+      required:
+      - id
+      title: Plan
+    BookedSlotActivity:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Activity ID
+          example: 481
+        name:
           anyOf:
           - type: string
           - type: 'null'
-          title: Tax Id
-          description: Tax identification number of the business
-          example: B12345678
+          title: Name
+          description: Activity name
+          example: Escape Room Northbridge
       type: object
-      title: Business
+      title: BookedSlotActivity
+    Search_Order_OrderItemParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/OrderItemParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/Order-Output'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[Order, OrderItemParams]
+    BookedSlotAsset:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Asset ID (e.g. an Escape This room)
+          example: 3473
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Asset name
+          example: NB - Asylum
+        description:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Description
+          description: Asset description
+        availability_strategy:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Availability Strategy
+          description: Capacity strategy used by the asset (BY_PARTY_COUNT or BY_PEOPLE_COUNT)
+          example: BY_PARTY_COUNT
+        max_party_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Party Size
+          description: Maximum number of people allowed in a single party
+          example: 4
+        min_party_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Min Party Size
+          description: Minimum number of people required to book a party
+          example: 1
+        max_num_parties:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Max Num Parties
+          description: Maximum number of independent parties the asset can host
+          example: 1
+        partner_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Partner Id
+          description: Partner that owns the asset
+          example: 190
+        asset_type_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Asset Type Id
+          description: Asset type ID
+          example: 7
+        is_manual_assignment_confirmation_required:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Manual Assignment Confirmation Required
+          description: Whether the asset requires manual assignment confirmation
+          example: false
+      type: object
+      title: BookedSlotAsset
+    PurchaseLocationQuality:
+      type: string
+      enum:
+      - HIGH
+      - MEDIUM
+      - UNKNOWN
+      title: PurchaseLocationQuality
+    Venue:
+      properties:
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+          description: Venue city
+          example: New York
+        country:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country
+          description: Venue country
+          example: USA
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Venue name
+          example: Madison Square Garden
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+          description: Venue timezone
+          example: America/New_York
+      type: object
+      title: Venue
     Coupon:
       properties:
         name:
@@ -1097,31 +804,62 @@ components:
           example: No Coupons
       type: object
       title: Coupon
-    PaymentDetail:
+    BookedSlot:
       properties:
         id:
           anyOf:
-          - type: string
+          - type: integer
           - type: 'null'
           title: Id
-          description: Transaction ID issued by the payment processor (Braintree, Stripe, ...)
-          example: tx_abc123
-        card_brand:
+          description: Unique ID of the booked slot. Matches `order_item.booked_slot_id` for every order item assigned to this slot.
+          example: 9876543
+        timeslot_utc:
           anyOf:
           - type: string
           - type: 'null'
-          title: Card Brand
-          description: Card brand (`visa`, `mastercard`, `amex`, `discover`, ...)
-          example: visa
-        payment_method:
+          title: Timeslot Utc
+          description: UTC start of the timeslot the slot is booked for
+          example: '2026-05-08 09:30:00'
+        slot_count:
           anyOf:
-          - type: string
+          - type: integer
           - type: 'null'
-          title: Payment Method
-          description: Descriptive payment method joined from the order's payment configuration
-          example: Card
+          title: Slot Count
+          description: Capacity counter from the cart engine. Useful for debugging only — see `party_size` for the actual people booked.
+          example: 12
+        occupancy_count:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Occupancy Count
+          description: Number of independent parties booked at the asset for this cart
+          example: 1
+        party_size:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Party Size
+          description: Total people (count of order items) sold for this booked slot
+          example: 4
+        is_removed:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Removed
+          description: Whether the slot was removed by the cart engine
+          example: false
+        activity:
+          anyOf:
+          - $ref: '#/components/schemas/BookedSlotActivity'
+          - type: 'null'
+          description: Activity that owns the booked asset
+        asset:
+          anyOf:
+          - $ref: '#/components/schemas/BookedSlotAsset'
+          - type: 'null'
+          description: Asset (e.g. room) the slot is booked on
       type: object
-      title: PaymentDetail
+      title: BookedSlot
     Order-Input:
       properties:
         id:
@@ -1300,189 +1038,64 @@ components:
       required:
       - id
       title: Order
-    Plan-Input:
+    Buyer:
       properties:
         id:
           type: integer
           title: Id
-          description: Plan ID
-          example: 1234
-        gallery:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/GalleryResource'
-            type: array
-          - type: 'null'
-          title: Gallery
-          description: List of gallery resources attached to the plan
-        name:
+          description: Buyer ID
+          example: '123456'
+        date_of_birthday:
           anyOf:
           - type: string
           - type: 'null'
-          title: Name
-          description: Plan name
-          example: Plan name
-        taxonomies:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/Taxonomy'
-            type: array
-          - type: 'null'
-          title: Taxonomies
-          description: List of taxonomies attached to the plan
-      type: object
-      required:
-      - id
-      title: Plan
-    OrderItemIncludedField:
-      type: string
-      enum:
-      - booked_slots
-      - staff_notes
-      - metadata
-      title: OrderItemIncludedField
-    PurchaseLocationQuality:
-      type: string
-      enum:
-      - HIGH
-      - MEDIUM
-      - UNKNOWN
-      title: PurchaseLocationQuality
-    Search_Order_OrderItemParams_-Input:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/OrderItemParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/Order-Input'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[Order, OrderItemParams]
-    BookedSlot:
-      properties:
-        id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Id
-          description: Unique ID of the booked slot. Matches `order_item.booked_slot_id` for every order item assigned to this slot.
-          example: 9876543
-        timeslot_utc:
+          title: Date Of Birthday
+          description: Buyer date of birth
+          example: '1990-01-01'
+        email:
           anyOf:
           - type: string
           - type: 'null'
-          title: Timeslot Utc
-          description: UTC start of the timeslot the slot is booked for
-          example: '2026-05-08 09:30:00'
-        slot_count:
+          title: Email
+          description: Buyer email address
+          example: test@example.com
+        first_name:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
-          title: Slot Count
-          description: Capacity counter from the cart engine. Useful for debugging only — see `party_size` for the actual people booked.
-          example: 12
-        occupancy_count:
+          title: First Name
+          description: Buyer first name
+          example: John
+        language:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
-          title: Occupancy Count
-          description: Number of independent parties booked at the asset for this cart
-          example: 1
-        party_size:
+          title: Language
+          description: Buyer language, extracted from the device locale. The format is ISO 639-1 (two letters).
+          example: es
+        last_name:
           anyOf:
-          - type: integer
+          - type: string
           - type: 'null'
-          title: Party Size
-          description: Total people (count of order items) sold for this booked slot
-          example: 4
-        is_removed:
+          title: Last Name
+          description: Buyer last name
+          example: Doe
+        marketing_preference:
           anyOf:
           - type: boolean
           - type: 'null'
-          title: Is Removed
-          description: Whether the slot was removed by the cart engine
-          example: false
-        activity:
+          title: Marketing Preference
+          description: Buyer marketing preference
+          example: true
+        b2b_end_user:
           anyOf:
-          - $ref: '#/components/schemas/BookedSlotActivity'
+          - $ref: '#/components/schemas/B2BEndUser'
           - type: 'null'
-          description: Activity that owns the booked asset
-        asset:
-          anyOf:
-          - $ref: '#/components/schemas/BookedSlotAsset'
-          - type: 'null'
-          description: Asset (e.g. room) the slot is booked on
-      type: object
-      title: BookedSlot
-    BookingQuestion:
-      properties:
-        id:
-          type: string
-          title: Id
-          description: Booking question ID
-          example: '123456'
-        question:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Question
-          description: Booking question
-          example: How did you find out about this experience?
-        answers:
-          anyOf:
-          - items:
-              type: string
-            type: array
-          - type: 'null'
-          title: Answers
-          description: Booking question answers
-          example:
-          - Instagram
-          - Facebook
-        index:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Index
-          description: Booking question index. It allows to relate the answers of independent questions
-          example: 1
+          description: B2B end user information
       type: object
       required:
       - id
-      title: BookingQuestion
-    SearchStatus:
-      properties:
-        message:
-          type: string
-          title: Message
-          description: Message about the search status
-          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
-        search_id:
-          type: string
-          format: uuid
-          title: Search Id
-          description: The search ID
-          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
-      type: object
-      required:
-      - message
-      - search_id
-      title: SearchStatus
+      title: Buyer
     Plan-Output:
       properties:
         id:
@@ -1517,90 +1130,269 @@ components:
       required:
       - id
       title: Plan
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    Taxonomy:
+    Order-Output:
       properties:
         id:
           type: integer
           title: Id
-          description: Taxonomy ID
-          example: 1234
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Taxonomy name
-          example: Taxonomy name
-      type: object
-      required:
-      - id
-      title: Taxonomy
-    B2BEndUser:
-      properties:
-        id:
-          type: integer
-          title: Id
-          description: B2B End User ID
+          description: Unique order ID. This code groups all tickets bought in the same transaction.
           example: 123456
-        email:
+        parent_order_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Parent Order Id
+          description: If the order comes from a reschedule, the original order ID.
+          example: 11234
+        buyer:
+          anyOf:
+          - $ref: '#/components/schemas/Buyer'
+          - type: 'null'
+          description: Order buyer information
+        created_date_utc:
           anyOf:
           - type: string
           - type: 'null'
-          title: Email
-          description: B2B End User email address
-          example: test@feverup.com
-        first_name:
+          title: Created Date Utc
+          description: UTC date when the order was created
+          example: '2021-01-01 00:00:00'
+        updated_date_utc:
           anyOf:
           - type: string
           - type: 'null'
-          title: First Name
-          description: B2B End User first name
-          example: John
-        last_name:
+          title: Updated Date Utc
+          description: UTC date when the order data was last updated. It moves whenever ANY field of the (flattened) order record changes — including nested/enrichment fields such as plan name, UTM or ratings — not only order-level fields. This is the field the `UPDATED_DATE_UTC` date filter matches against, so a search by `UPDATED_DATE_UTC` and this value are always consistent. For the order's own update time, use `order_updated_date_utc`.
+          example: '2021-01-01 00:00:00'
+        order_updated_date_utc:
           anyOf:
           - type: string
           - type: 'null'
-          title: Last Name
-          description: B2B End User last name
-          example: Doe
-      type: object
-      required:
-      - id
-      title: B2BEndUser
-    Search_Order_OrderItemParams_-Output:
-      properties:
-        partition_info:
+          title: Order Updated Date Utc
+          description: UTC date when the order itself was last updated (order-level fields only). Unlike `updated_date_utc`, it does not move when only nested/enrichment data (e.g. plan name) changes.
+          example: '2021-01-01 00:00:00'
+        surcharge:
+          anyOf:
+          - type: number
+          - type: 'null'
+          title: Surcharge
+          description: Surcharge applied to the order
+          example: 0.0
+        currency:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Currency
+          description: ISO3 currency of the order monetary fields
+          example: USD
+        purchase_channel:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Purchase Channel
+          description: Purchase channel where the transaction comes from
+          example: web
+        channel:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Channel
+          description: Channel slug through which this order was placed (CD_ORDER_PURCHASE_SOURCE). Join key with the `channel` field in `POST /v1/reports/channels/search`. Null when no channel is recorded on the order.
+          example: merlin-ticketmaster-uk
+        payment_method:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Payment Method
+          description: Payment method used
+          example: credit_card
+        purchase_location_source:
+          anyOf:
+          - $ref: '#/components/schemas/PurchaseLocation'
+          - type: 'null'
+          description: Purchase location information
+        billing_zip_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Billing Zip Code
+          description: Billing ZIP Code manually fulfilled by the customer
+          example: '28001'
+        partner:
+          anyOf:
+          - $ref: '#/components/schemas/Partner'
+          - type: 'null'
+          description: Partner information
+        plan:
+          anyOf:
+          - $ref: '#/components/schemas/Plan-Output'
+          - type: 'null'
+          description: Plan information
+        coupon:
+          anyOf:
+          - $ref: '#/components/schemas/Coupon'
+          - type: 'null'
+          description: Coupon information
+        assigned_seats:
           anyOf:
           - items:
-              $ref: '#/components/schemas/PartitionInfo'
+              $ref: '#/components/schemas/AssignedSeat'
             type: array
           - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
+          title: Assigned Seats
+          description: List of assigned seats for the order
+        booking_questions:
           anyOf:
-          - $ref: '#/components/schemas/OrderItemParams'
+          - items:
+              $ref: '#/components/schemas/BookingQuestion'
+            type: array
           - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/Order-Output'
-          type: array
-          title: Data
-          description: Data rows
+          title: Booking Questions
+          description: List of booking questions and answers for the order
+        business:
+          anyOf:
+          - $ref: '#/components/schemas/Business'
+          - type: 'null'
+          description: Business associated with the order
+        utm:
+          anyOf:
+          - $ref: '#/components/schemas/UTM'
+          - type: 'null'
+          description: UTM attributed to the order
+        order_items:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/OrderItem-Output'
+            type: array
+          - type: 'null'
+          title: Order Items
+          description: List of order items associated with this order
+        staff_notes:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Staff Notes
+          description: Staff notes associated with the order
+        booked_slots:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/BookedSlot'
+            type: array
+          - type: 'null'
+          title: Booked Slots
+          description: List of booked slots (assets/rooms reserved by the cart) associated with the order
+        payment_details:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PaymentDetail'
+            type: array
+          - type: 'null'
+          title: Payment Details
+          description: Card payment details for the order. Empty/null when the order was not paid by card or no card details are recorded. Same array is denormalized across every order item belonging to the same order.
+        order_group_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Order Group Id
+          description: Groups orders from cluster tickets. All orders with the same order_group_id belong to the same purchase group (e.g., bundled tickets across multiple venues).
+          example: 12345
+        is_main_group_order:
+          anyOf:
+          - type: boolean
+          - type: 'null'
+          title: Is Main Group Order
+          description: Flag indicating whether this is the main order in a group. True for the primary order, False for secondary orders in the same group.
+          example: true
       type: object
       required:
-      - data
-      title: Search[Order, OrderItemParams]
+      - id
+      title: Order
+    PurchaseLocation:
+      properties:
+        id_geo_name:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id Geo Name
+          description: ID of the geo name from where the purchase was made. This field is inferred so it might not be accurate. More information at https://www.geonames.org/about.html
+          example: 123456
+        city_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City Name
+          description: City from where the purchase was made. This field is inferred so it might not be accurate.
+          example: Sunnyvale
+        country_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country Code
+          description: Country code from where the purchase was made. This field is inferred so it might not be accurate.
+          example: US
+        region_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Region Code
+          description: Region code from where the purchase was made. This field is inferred so it might not be accurate.
+          example: CA
+        postal_code:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Postal Code
+          description: Postal code from where the purchase was made. This field is inferred so it might not be accurate.
+          example: '94043'
+        quality:
+          anyOf:
+          - $ref: '#/components/schemas/PurchaseLocationQuality'
+          - type: 'null'
+          description: Quality of the purchase location. Its value depends on the source it was inferred from.
+          examples:
+          - MEDIUM
+          - HIGH
+      type: object
+      title: PurchaseLocation
+    ValidationError:
+      properties:
+        loc:
+          items:
+            anyOf:
+            - type: string
+            - type: integer
+          type: array
+          title: Location
+        msg:
+          type: string
+          title: Message
+        type:
+          type: string
+          title: Error Type
+      type: object
+      required:
+      - loc
+      - msg
+      - type
+      title: ValidationError
+    GalleryResource:
+      properties:
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+          description: Gallery resource URL
+          example: https://www.example.com/image.jpg
+        type:
+          $ref: '#/components/schemas/GalleryResourceType'
+          description: Gallery resource type (image or video)
+          example: image
+      type: object
+      required:
+      - type
+      title: GalleryResource
     OrderItem-Output:
       properties:
         id:
@@ -1749,103 +1541,166 @@ components:
           description: Optional metadata supplied by the partner's integration when the order was placed, intended to support reconciliation against the partner's own system of record (external IDs for the order item and, when applicable, the subproduct it belongs to). Only returned when explicitly requested via `included_fields=metadata`; omitted by default to keep payloads compact for partners who don't need it. NULL when the partner did not provide any reporting metadata for the order item. See the `Metadata` schema for the full list of fields.
       type: object
       title: OrderItem
-    Partner:
+    UTM:
       properties:
-        id:
-          type: integer
-          title: Id
-          description: Partner ID
-          example: 1234
-        name:
+        campaign:
           anyOf:
           - type: string
           - type: 'null'
-          title: Name
-          description: Partner name
-          example: Partner 1
+          title: Campaign
+          description: UTM campaign name
+          example: summer_sale
+        content:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Content
+          description: UTM content
+          example: banner_ad
+        medium:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Medium
+          description: UTM medium
+          example: cpc
+        source:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Source
+          description: UTM source
+          example: google
+        term:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Term
+          description: UTM term
+          example: running+shoes
+        referring_domain:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Referring Domain
+          description: UTM term
+          example: https://google.com
+      type: object
+      title: UTM
+    SearchStatus:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
+          type: string
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
+      type: object
+      required:
+      - message
+      - search_id
+      title: SearchStatus
+    BookingQuestion:
+      properties:
+        id:
+          type: string
+          title: Id
+          description: Booking question ID
+          example: '123456'
+        question:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Question
+          description: Booking question
+          example: How did you find out about this experience?
+        answers:
+          anyOf:
+          - items:
+              type: string
+            type: array
+          - type: 'null'
+          title: Answers
+          description: Booking question answers
+          example:
+          - Instagram
+          - Facebook
+        index:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Index
+          description: Booking question index. It allows to relate the answers of independent questions
+          example: 1
       type: object
       required:
       - id
-      title: Partner
-    Venue:
+      title: BookingQuestion
+    OrderItemParams:
       properties:
-        city:
+        order_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Order Ids
+          description: List of ids of the orders to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        date_field:
+          anyOf:
+          - type: string
+            enum:
+            - CREATED_DATE_UTC
+            - UPDATED_DATE_UTC
+            - EVENT_START_DATE_UTC
+          - type: 'null'
+          title: Date Field
+          description: Date field to filter the search
+          example: CREATED_DATE_UTC
+        date_from:
           anyOf:
           - type: string
           - type: 'null'
-          title: City
-          description: Venue city
-          example: New York
-        country:
+          title: Date From
+          description: Start date for the selected date field. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-18 00:00
+        date_to:
           anyOf:
           - type: string
           - type: 'null'
-          title: Country
-          description: Venue country
-          example: USA
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Venue name
-          example: Madison Square Garden
-        timezone:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Timezone
-          description: Venue timezone
-          example: America/New_York
+          title: Date To
+          description: End date for the selected date field. If hour and minute are not specified, 00:00 is added by default
+          example: 2024-12-19 00:00
+      additionalProperties: false
       type: object
-      title: Venue
-    GalleryResourceType:
-      type: string
-      enum:
-      - image
-      - video
-      title: GalleryResourceType
-    PartitionInfo:
-      properties:
-        partition_num:
-          type: integer
-          minimum: 0.0
-          title: Partition Num
-          description: Partition number
-          example: 0
-        endpoint:
-          type: string
-          title: Endpoint
-          description: Endpoint to fetch data for partition
-          example: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
-        size:
-          type: integer
-          minimum: 0.0
-          title: Size
-          description: Partition size in bytes
-          example: 15058
-        rows:
-          type: integer
-          minimum: 0.0
-          title: Rows
-          description: Number of rows contained in partition. One row represents a single transaction result (e.g. order, plan etc.).
-          example: 4099
-      type: object
-      required:
-      - partition_num
-      - endpoint
-      - size
-      - rows
-      title: PartitionInfo
-      examples:
-      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=0
-        partition_num: 0
-        rows: 4099
-        size: 15058
-      - endpoint: /01b26479-0203-63c9-0000-d37572ae91ea?page=1
-        partition_num: 1
-        rows: 3145
-        size: 11260
+      title: OrderItemParams
     PlanCode:
       properties:
         id:
@@ -1917,6 +1772,32 @@ components:
       required:
       - id
       title: PlanCode
+    Business:
+      properties:
+        id:
+          anyOf:
+          - type: string
+            format: uuid
+          - type: 'null'
+          title: Id
+          description: Business ID
+          example: 7c1caabf-85cd-42ac-96db-524b15443a7b
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Business name
+          example: Sample City Tours
+        tax_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Tax Id
+          description: Tax identification number of the business
+          example: B12345678
+      type: object
+      title: Business
     Session:
       properties:
         id:
@@ -1999,64 +1880,183 @@ components:
       required:
       - id
       title: Session
-    Buyer:
+    Partner:
       properties:
         id:
           type: integer
           title: Id
-          description: Buyer ID
-          example: '123456'
-        date_of_birthday:
+          description: Partner ID
+          example: 1234
+        name:
           anyOf:
           - type: string
           - type: 'null'
-          title: Date Of Birthday
-          description: Buyer date of birth
-          example: '1990-01-01'
+          title: Name
+          description: Partner name
+          example: Partner 1
+      type: object
+      required:
+      - id
+      title: Partner
+    B2BEndUser:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: B2B End User ID
+          example: 123456
         email:
           anyOf:
           - type: string
           - type: 'null'
           title: Email
-          description: Buyer email address
-          example: test@example.com
+          description: B2B End User email address
+          example: test@feverup.com
         first_name:
           anyOf:
           - type: string
           - type: 'null'
           title: First Name
-          description: Buyer first name
+          description: B2B End User first name
           example: John
-        language:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Language
-          description: Buyer language, extracted from the device locale. The format is ISO 639-1 (two letters).
-          example: es
         last_name:
           anyOf:
           - type: string
           - type: 'null'
           title: Last Name
-          description: Buyer last name
+          description: B2B End User last name
           example: Doe
-        marketing_preference:
-          anyOf:
-          - type: boolean
-          - type: 'null'
-          title: Marketing Preference
-          description: Buyer marketing preference
-          example: true
-        b2b_end_user:
-          anyOf:
-          - $ref: '#/components/schemas/B2BEndUser'
-          - type: 'null'
-          description: B2B end user information
       type: object
       required:
       - id
-      title: Buyer
+      title: B2BEndUser
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
+    Metadata:
+      properties:
+        external_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: External Id
+          description: Partner-supplied external identifier for the order item, as sent by the partner's integration when the order was placed. Sourced from the order item's `METADATA.reporting.external_id` field on the upstream record. Useful when the partner needs to reconcile Fever order items against rows in their own system of record (e.g., box-office ticket IDs, internal SKUs). NULL when the partner did not provide one.
+          example: CJ51001B
+        external_subproduct_id:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: External Subproduct Id
+          description: Partner-supplied external subproduct identifier for the order item, used when a single plan exposes multiple distinguishable subproducts (e.g., adult vs. child ticket variants, add-ons, seating categories). Sourced from the order item's `METADATA.reporting.external_subproduct_id` field on the upstream record. NULL when the partner did not provide one or the plan has no subproducts.
+          example: ADULTO
+      type: object
+      title: Metadata
+    Taxonomy:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Taxonomy ID
+          example: 1234
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Taxonomy name
+          example: Taxonomy name
+      type: object
+      required:
+      - id
+      title: Taxonomy
+    Pack:
+      properties:
+        id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Id
+          description: Unique identifier of the order item pack
+          example: 789012
+        session_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Session Id
+          description: Unique identifier of the pack session in the catalog (matches the id returned by the Sessions endpoint). Stable across all purchases of the same pack session. Use this instead of session_name, which is not unique.
+          example: 284360344
+        session_name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Session Name
+          description: Label of the session pack
+          example: Family Package
+      type: object
+      title: Pack
+    AssignedSeat:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Booking question ID
+          example: 123456
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Assigned seat name
+          example: Level 2 - Row F - Seat 227
+        seating_provider:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seating Provider
+          description: Seating provider
+          example: seats-io
+        seating_provider_seat_reference:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Seating Provider Seat Reference
+          description: Seating provider seat reference
+          example: Level 2 - Row F - Seat 227
+      type: object
+      required:
+      - id
+      title: AssignedSeat
+    Search_Order_OrderItemParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/OrderItemParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/Order-Input'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[Order, OrderItemParams]
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2

@@ -56,21 +56,6 @@ paths:
         label: Python
 components:
   schemas:
-    Body_create_token_auth_token_post:
-      properties:
-        username:
-          type: string
-          title: Username
-        password:
-          type: string
-          format: password
-          title: Password
-          writeOnly: true
-      type: object
-      required:
-      - username
-      - password
-      title: Body_create_token_auth_token_post
     HTTPValidationError:
       properties:
         detail:
@@ -80,6 +65,23 @@ components:
           title: Detail
       type: object
       title: HTTPValidationError
+    Token:
+      properties:
+        access_token:
+          type: string
+          title: Access token
+          description: The JWT access token
+          example: eyJhbGc1234
+        token_type:
+          type: string
+          title: Token type
+          description: The JWT token type
+          example: Bearer
+      type: object
+      required:
+      - access_token
+      - token_type
+      title: Token
     ValidationError:
       properties:
         loc:
@@ -101,23 +103,21 @@ components:
       - msg
       - type
       title: ValidationError
-    Token:
+    Body_create_token_auth_token_post:
       properties:
-        access_token:
+        username:
           type: string
-          title: Access token
-          description: The JWT access token
-          example: eyJhbGc1234
-        token_type:
+          title: Username
+        password:
           type: string
-          title: Token type
-          description: The JWT token type
-          example: Bearer
+          format: password
+          title: Password
+          writeOnly: true
       type: object
       required:
-      - access_token
-      - token_type
-      title: Token
+      - username
+      - password
+      title: Body_create_token_auth_token_post
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2
