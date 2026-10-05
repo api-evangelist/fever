@@ -1,0 +1,12 @@
+{
+ "url": "https://data-reporting-api.prod.feverup.com/v1/openapi.json",
+ "requested_url": "https://data-reporting-api.prod.feverup.com/v1/openapi.json",
+ "status": 200,
+ "content_type": "application/json",
+ "bytes": 273922,
+ "sha256": "982b4306ef667f0edf42c910f60c2f6cf2604847d0376994bbd041e2905695dd",
+ "fetched_at": "2026-10-04",
+ "fetched_by": "APIEvangelist-Harvest/1.0 (+https://apievangelist.com)",
+ "match": "equivalent",
+ "note": "Re-fetched from the provider by verify-openapi-sources.py; the provider's current document describes the same operations (Jaccard 1.0), but the bytes differ, so the archive is an earlier or reformatted copy."
+}
