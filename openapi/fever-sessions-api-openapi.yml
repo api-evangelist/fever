@@ -280,38 +280,55 @@ paths:
         label: Python
 components:
   schemas:
-    Venue:
+    SessionsParams:
       properties:
-        city:
+        session_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Session Ids
+          description: List of ids of the sessions to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        plan_ids:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+            maxItems: 1000
+          - type: 'null'
+          title: Plan Ids
+          description: List of ids of the plans to filter by.
+          default: []
+          examples:
+          - []
+          - - 123
+          - - 123
+            - 456
+        updated_date_utc_from:
           anyOf:
           - type: string
           - type: 'null'
-          title: City
-          description: Venue city
-          example: New York
-        country:
+          title: Updated Date Utc From
+          description: UTC start date for the warehouse last-updated filter (inclusive). Filters rows whose underlying warehouse record changed at or after this instant. If hour and minute are not specified, 00:00 is added by default
+          example: 2026-05-24 00:00
+        updated_date_utc_to:
           anyOf:
           - type: string
           - type: 'null'
-          title: Country
-          description: Venue country
-          example: USA
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Venue name
-          example: Madison Square Garden
-        timezone:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Timezone
-          description: Venue timezone
-          example: America/New_York
+          title: Updated Date Utc To
+          description: UTC end date for the warehouse last-updated filter (exclusive). Filters rows whose underlying warehouse record changed strictly before this instant. If hour and minute are not specified, 00:00 is added by default
+          example: 2026-05-25 00:00
+      additionalProperties: false
       type: object
-      title: Venue
+      title: SessionsParams
     ValidationError:
       properties:
         loc:
@@ -333,6 +350,49 @@ components:
       - msg
       - type
       title: ValidationError
+    Search_SessionDimension_SessionsParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SessionsParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SessionDimension'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SessionDimension, SessionsParams]
+    SearchStatus:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
+          type: string
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
+      type: object
+      required:
+      - message
+      - search_id
+      title: SearchStatus
     SessionDimension:
       properties:
         id:
@@ -493,6 +553,72 @@ components:
       - id
       - session_type_id
       title: SessionDimension
+    Venue:
+      properties:
+        city:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: City
+          description: Venue city
+          example: New York
+        country:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country
+          description: Venue country
+          example: USA
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Venue name
+          example: Madison Square Garden
+        timezone:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Timezone
+          description: Venue timezone
+          example: America/New_York
+      type: object
+      title: Venue
+    Search_SessionDimension_SessionsParams_-Input:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/SessionsParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/SessionDimension'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[SessionDimension, SessionsParams]
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
     PartitionInfo:
       properties:
         partition_num:
@@ -534,132 +660,6 @@ components:
         partition_num: 1
         rows: 3145
         size: 11260
-    Search_SessionDimension_SessionsParams_-Output:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SessionsParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/SessionDimension'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[SessionDimension, SessionsParams]
-    SessionsParams:
-      properties:
-        session_ids:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-            maxItems: 1000
-          - type: 'null'
-          title: Session Ids
-          description: List of ids of the sessions to filter by.
-          default: []
-          examples:
-          - []
-          - - 123
-          - - 123
-            - 456
-        plan_ids:
-          anyOf:
-          - items:
-              type: integer
-            type: array
-            maxItems: 1000
-          - type: 'null'
-          title: Plan Ids
-          description: List of ids of the plans to filter by.
-          default: []
-          examples:
-          - []
-          - - 123
-          - - 123
-            - 456
-        updated_date_utc_from:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Updated Date Utc From
-          description: UTC start date for the warehouse last-updated filter (inclusive). Filters rows whose underlying warehouse record changed at or after this instant. If hour and minute are not specified, 00:00 is added by default
-          example: 2026-05-24 00:00
-        updated_date_utc_to:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Updated Date Utc To
-          description: UTC end date for the warehouse last-updated filter (exclusive). Filters rows whose underlying warehouse record changed strictly before this instant. If hour and minute are not specified, 00:00 is added by default
-          example: 2026-05-25 00:00
-      additionalProperties: false
-      type: object
-      title: SessionsParams
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    SearchStatus:
-      properties:
-        message:
-          type: string
-          title: Message
-          description: Message about the search status
-          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
-        search_id:
-          type: string
-          format: uuid
-          title: Search Id
-          description: The search ID
-          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
-      type: object
-      required:
-      - message
-      - search_id
-      title: SearchStatus
-    Search_SessionDimension_SessionsParams_-Input:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/SessionsParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/SessionDimension'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[SessionDimension, SessionsParams]
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2

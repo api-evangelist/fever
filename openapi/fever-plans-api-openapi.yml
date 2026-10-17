@@ -282,69 +282,6 @@ paths:
         label: Python
 components:
   schemas:
-    GalleryResourceType:
-      type: string
-      enum:
-      - image
-      - video
-      title: GalleryResourceType
-    Search_PlanDimension_PlansParams_-Output:
-      properties:
-        partition_info:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PartitionInfo'
-            type: array
-          - type: 'null'
-          title: Partition Info
-          description: Partition information
-        params:
-          anyOf:
-          - $ref: '#/components/schemas/PlansParams'
-          - type: 'null'
-          description: Parameters used in the search
-        data:
-          items:
-            $ref: '#/components/schemas/PlanDimension-Output'
-          type: array
-          title: Data
-          description: Data rows
-      type: object
-      required:
-      - data
-      title: Search[PlanDimension, PlansParams]
-    Venue:
-      properties:
-        city:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: City
-          description: Venue city
-          example: New York
-        country:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Country
-          description: Venue country
-          example: USA
-        name:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Name
-          description: Venue name
-          example: Madison Square Garden
-        timezone:
-          anyOf:
-          - type: string
-          - type: 'null'
-          title: Timezone
-          description: Venue timezone
-          example: America/New_York
-      type: object
-      title: Venue
     ValidationError:
       properties:
         loc:
@@ -467,6 +404,49 @@ components:
       - partner_id
       - partner_name
       title: PlanDimension
+    SearchStatus:
+      properties:
+        message:
+          type: string
+          title: Message
+          description: Message about the search status
+          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
+        search_id:
+          type: string
+          format: uuid
+          title: Search Id
+          description: The search ID
+          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
+      type: object
+      required:
+      - message
+      - search_id
+      title: SearchStatus
+    Search_PlanDimension_PlansParams_-Output:
+      properties:
+        partition_info:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PartitionInfo'
+            type: array
+          - type: 'null'
+          title: Partition Info
+          description: Partition information
+        params:
+          anyOf:
+          - $ref: '#/components/schemas/PlansParams'
+          - type: 'null'
+          description: Parameters used in the search
+        data:
+          items:
+            $ref: '#/components/schemas/PlanDimension-Output'
+          type: array
+          title: Data
+          description: Data rows
+      type: object
+      required:
+      - data
+      title: Search[PlanDimension, PlansParams]
     PartitionInfo:
       properties:
         partition_num:
@@ -668,112 +648,38 @@ components:
       - id
       - session_type_id
       title: SessionDimension
-    GalleryResource:
+    Venue:
       properties:
-        url:
+        city:
           anyOf:
           - type: string
           - type: 'null'
-          title: Url
-          description: Gallery resource URL
-          example: https://www.example.com/image.jpg
-        type:
-          $ref: '#/components/schemas/GalleryResourceType'
-          description: Gallery resource type (image or video)
-          example: image
-      type: object
-      required:
-      - type
-      title: GalleryResource
-    ExternalProvider:
-      properties:
+          title: City
+          description: Venue city
+          example: New York
+        country:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Country
+          description: Venue country
+          example: USA
         name:
           anyOf:
           - type: string
           - type: 'null'
           title: Name
-          description: External provider name
-          example: external_provider
-        plan_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Plan Id
-          description: External provider plan ID
-          example: 1234
-        session_id:
-          anyOf:
-          - type: integer
-          - type: 'null'
-          title: Session Id
-          description: External provider session ID
-          example: 1234
-      type: object
-      title: ExternalProvider
-    Currency:
-      type: string
-      enum:
-      - AED
-      - ARS
-      - AUD
-      - BGN
-      - BRL
-      - CAD
-      - CHF
-      - CLP
-      - COP
-      - CRC
-      - CZK
-      - DKK
-      - EUR
-      - GBP
-      - HKD
-      - HUF
-      - INR
-      - JPY
-      - KRW
-      - MAD
-      - MXN
-      - MYR
-      - NOK
-      - NZD
-      - PLN
-      - QAR
-      - RON
-      - RUB
-      - SAR
-      - SEK
-      - SGD
-      - USD
-      - ZAR
-      title: Currency
-    HTTPValidationError:
-      properties:
-        detail:
-          items:
-            $ref: '#/components/schemas/ValidationError'
-          type: array
-          title: Detail
-      type: object
-      title: HTTPValidationError
-    Taxonomy:
-      properties:
-        id:
-          type: integer
-          title: Id
-          description: Taxonomy ID
-          example: 1234
-        name:
+          description: Venue name
+          example: Madison Square Garden
+        timezone:
           anyOf:
           - type: string
           - type: 'null'
-          title: Name
-          description: Taxonomy name
-          example: Taxonomy name
+          title: Timezone
+          description: Venue timezone
+          example: America/New_York
       type: object
-      required:
-      - id
-      title: Taxonomy
+      title: Venue
     PlanDimension-Input:
       properties:
         id:
@@ -875,24 +781,12 @@ components:
       - partner_id
       - partner_name
       title: PlanDimension
-    SearchStatus:
-      properties:
-        message:
-          type: string
-          title: Message
-          description: Message about the search status
-          example: Asynchronous execution in progress. Use provided query id to perform query monitoring and management.
-        search_id:
-          type: string
-          format: uuid
-          title: Search Id
-          description: The search ID
-          example: b59d4093-cbfc-4a1d-be5c-ba78d4ffbc64
-      type: object
-      required:
-      - message
-      - search_id
-      title: SearchStatus
+    GalleryResourceType:
+      type: string
+      enum:
+      - image
+      - video
+      title: GalleryResourceType
     PlansParams:
       properties:
         plan_ids:
@@ -913,6 +807,87 @@ components:
       additionalProperties: false
       type: object
       title: PlansParams
+    GalleryResource:
+      properties:
+        url:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Url
+          description: Gallery resource URL
+          example: https://www.example.com/image.jpg
+        type:
+          $ref: '#/components/schemas/GalleryResourceType'
+          description: Gallery resource type (image or video)
+          example: image
+      type: object
+      required:
+      - type
+      title: GalleryResource
+    Currency:
+      type: string
+      enum:
+      - AED
+      - ARS
+      - AUD
+      - BGN
+      - BRL
+      - CAD
+      - CHF
+      - CLP
+      - COP
+      - CRC
+      - CZK
+      - DKK
+      - EUR
+      - GBP
+      - HKD
+      - HUF
+      - INR
+      - JPY
+      - KRW
+      - MAD
+      - MXN
+      - MYR
+      - NOK
+      - NZD
+      - PLN
+      - QAR
+      - RON
+      - RUB
+      - SAR
+      - SEK
+      - SGD
+      - USD
+      - ZAR
+      title: Currency
+    Taxonomy:
+      properties:
+        id:
+          type: integer
+          title: Id
+          description: Taxonomy ID
+          example: 1234
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: Taxonomy name
+          example: Taxonomy name
+      type: object
+      required:
+      - id
+      title: Taxonomy
+    HTTPValidationError:
+      properties:
+        detail:
+          items:
+            $ref: '#/components/schemas/ValidationError'
+          type: array
+          title: Detail
+      type: object
+      title: HTTPValidationError
     Search_PlanDimension_PlansParams_-Input:
       properties:
         partition_info:
@@ -938,6 +913,31 @@ components:
       required:
       - data
       title: Search[PlanDimension, PlansParams]
+    ExternalProvider:
+      properties:
+        name:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Name
+          description: External provider name
+          example: external_provider
+        plan_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Plan Id
+          description: External provider plan ID
+          example: 1234
+        session_id:
+          anyOf:
+          - type: integer
+          - type: 'null'
+          title: Session Id
+          description: External provider session ID
+          example: 1234
+      type: object
+      title: ExternalProvider
   securitySchemes:
     OAuth2PasswordBearer:
       type: oauth2
