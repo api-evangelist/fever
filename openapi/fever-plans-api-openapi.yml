@@ -973,3 +973,9 @@ x-tagGroups:
   - Sessions
   - Square
   - Webhooks
+x-provenance:
+  method: harvested
+  publisher: Fever
+  source: https://data-reporting-api.prod.feverup.com/v1/openapi.json
+  note: split by refine-openapis from the provider's own published document, verified by fetch (openapi/_original/*.fetch.json);
+    stamped by stamp-openapi-provenance.py (roadmap#793)
