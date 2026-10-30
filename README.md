@@ -64,6 +64,130 @@
 > Full detail: **[Where this data comes from](https://apievangelist.com/about/where-our-data-comes-from)**
 <!-- API-EVANGELIST-PROVENANCE:END -->
 
-Fever is a company surfaced as a portfolio company of accel, general-catalyst and added to the API Evangelist network as a stub for enrichment. Sector: consumer. This profile is a lead awaiting the enrichment pipeline.
+Fever is a global live-entertainment discovery and ticketing platform that helps millions of people find events, activities and experiences in their city, and gives venues and partners the tools to sell and analyze tickets. For developers Fever exposes two public surfaces: an official Model Context Protocol (MCP) server over its real-time global event catalog (tools search_cities and search_events, OAuth 2.0 with PKCE), and a partner-facing Reporting API delivering in-depth event sales data (orders, tickets, financials, plan and session details) for CRM, BI, data-warehouse and ERP integration. Fever is backed by Accel and General Catalyst.
 
-Backed by: accel, general-catalyst — http://www.feverup.com
+**Areas:** Company · Consumer · Live Entertainment · Event · Ticketing · Experience · Reporting · MCP
+
+## Fever on APIs.io
+
+Everything profiled for Fever is published on APIs.io rather than in this repository. Start at the provider page — **[apis.io/providers/fever/](https://apis.io/providers/fever/)** — or go straight to one of the APIs or properties below.
+
+### APIs (5)
+
+- [Fever Authentication API](https://apis.io/apis/fever/fever-authentication-api/) — This endpoint is used to authenticate a user. It requires a username and password to be passed in the request body. If the user is authenticated…
+- [Fever FeverZone API](https://apis.io/apis/fever/fever-feverzone-api/) — These endpoints provide an interface to extract the data available in FeverZone reports. The delay of the data is less than 15 minutes from reality. The…
+- [Fever Order Items API](https://apis.io/apis/fever/fever-order-items-api/) — These endpoints enable to access order-item data. ## Filtering Options The endpoint supports filtering by: | Parameter | Type | Description |…
+- [Fever Plans API](https://apis.io/apis/fever/fever-plans-api/) — The goal of the Plan endpoint is to provide all information about the plans/events/experiences/listings organised by a partner. The delay of the data is…
+- [Fever Sessions API](https://apis.io/apis/fever/fever-sessions-api/) — The goal of the Session Endpoint is to provide all information about the session (or ticket types) of a plan. The delay of the data is less than 10 minutes…
+
+### Published properties
+
+Each property below is a page on APIs.io carrying the machine-readable artifact and what it says.
+
+#### MCP servers (1)
+
+Model Context Protocol servers that expose the API to agents.
+
+- [fever](https://apis.io/servers/fever/fever/)
+
+#### Agentic access (1)
+
+Which operations an agent can call, which act, and which need a human in the loop.
+
+- [Fever Agentic Access](https://apis.io/agentic-access/fever/fever-agentic-access/)
+
+#### Collections (5)
+
+Postman and Open Collection request collections.
+
+- [Fever - Reporting Authentication API](https://apis.io/collections/fever/open-fever-authentication-api/)
+- [Fever - Reporting Authentication FeverZone API](https://apis.io/collections/fever/open-fever-feverzone-api/)
+- [Fever - Reporting Authentication Order Items API](https://apis.io/collections/fever/open-fever-order-items-api/)
+- [Fever - Reporting Authentication Plans API](https://apis.io/collections/fever/open-fever-plans-api/)
+- [Fever - Reporting Authentication Sessions API](https://apis.io/collections/fever/open-fever-sessions-api/)
+
+#### Overlays (1)
+
+OpenAPI overlays, including conversational phrasing for each operation.
+
+- [Fever Reporting Api Overlay](https://apis.io/overlays/fever/fever-reporting-api-overlay/)
+
+#### Security (2)
+
+Authentication, trust centre, and vulnerability disclosure.
+
+- [Fever Authentication](https://apis.io/security/fever/fever-authentication/)
+- [Fever Domain Security](https://apis.io/security/fever/fever-domain-security/)
+
+#### Rate limits (1)
+
+Published request limits.
+
+- [Fever Rate Limits](https://apis.io/rate-limits/fever/fever-rate-limits/)
+
+## Where to find this API
+
+Links to the company's own pages. This repository publishes no copy of their specifications — the canonical document is theirs and lives at the URLs below.
+
+- [Website](https://www.feverup.com)
+- [Documentation](https://developer.feverup.com/en/)
+- [API reference](https://data-reporting-api.prod.feverup.com/v1/redoc)
+- [Support](https://fever.zendesk.com/hc/en-us)
+- [Terms of service](https://feverup.com/legal/terms_en.html)
+- [Privacy policy](https://feverup.com/legal/privacy_en.html)
+- [Status](https://status.data-reporting-api.prod.feverup.com/)
+
+## API Evangelist rating
+
+**Kin Score 33.2** — thin · rubric 0.25.0 · scored 2026-10-23
+
+| Facet | Score |
+|---|---|
+| Discoverability | 75.0 |
+| Contract quality | 45.3 |
+| Contract governance | 4.5 |
+| Operational transparency | 28.9 |
+| Developer ergonomics | 25.6 |
+| Access clarity | 21.1 |
+
+**Agent readiness 58.7** — agent-ready (gated down from agent-native)
+
+| Agent-readiness dimension | Result |
+|---|---|
+| Spec Presence | yes |
+| Agentic Access | derived (partial credit) |
+| Reversibility Documented | — |
+| MCP Server | verified |
+| Auth Clarity | served (partial credit) |
+| Idempotency | — |
+| Error Semantics | verified |
+| OpenAPI Examples | verified |
+| Rate Limit Signal | documented (partial credit) |
+| Event Surface Described | — |
+| Agent Skills | derived (partial credit) |
+| Well Known Catalog | — |
+| Consent Identity | — |
+| Agent Card | — |
+| Dry Run Mode | — |
+| Delegated Identity | served (partial credit) |
+| Protected Resource Metadata | verified |
+| Dynamic Client Registration | yes |
+| Agentic Commerce | — |
+| Pagination Ratio | paginated |
+| Operation Distinctiveness | distinct |
+
+**Regulatory alignment 24.5** — Horizontal (data, software, accessibility, platform)
+
+The rubric is published at [github.com/api-evangelist/kin-score](https://github.com/api-evangelist/kin-score). The per-check breakdown behind these numbers — which checks were earned, partial or missed — along with score history and how this provider compares to its peers, is available at [apis.io/providers/fever/](https://apis.io/providers/fever/).
+
+## How this profile is made
+
+API Evangelist profiles a company's public API surface the way a developer would find it: the website, developer portal and documentation, the specifications it publishes, its public repositories, and its pricing, status and changelog pages. From that it derives the properties above — contracts split per API, workflows, schemas, collections, governance rules, plans and rate limits — and scores them against the published [Kin Score rubric](https://github.com/api-evangelist/kin-score).
+
+The artifacts are published on [APIs.io](https://apis.io), not in this repository. This repository is the public record for Fever: the place to say something is wrong, missing or out of date, and to ask for a re-score or a removal.
+
+## Open an issue
+
+- **Something about this listing** — a wrong description, a missing API, a stale artifact or a question about the rating: [open an issue on this repository](https://github.com/api-evangelist/fever/issues/new).
+- **A new API, or one that is not in the catalog yet** — [submit it on APIs.io](https://apis.io/add/).
+- **Anything else** — [the APIs.io inbox](https://github.com/api-search/inbox/issues/new) or [info@apievangelist.com](mailto:info@apievangelist.com).
